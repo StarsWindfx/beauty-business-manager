@@ -8,7 +8,7 @@
   const SUB_CAT = { logiciel: 'Logiciel', reservation: 'Prise de rendez-vous', reseaux: 'Réseaux sociaux', assurance: 'Assurance', banque: 'Banque', telephonie: 'Téléphone', formation: 'Formation', local: 'Local', autre: 'Autre' };
   const FREQ = { monthly: 'Chaque mois', quarterly: 'Chaque trimestre', yearly: 'Chaque année', weekly: 'Chaque semaine', custom: 'Tous les N mois' };
   const STATUS = { active: 'Actif', paused: 'En pause', canceled: 'Résilié' };
-  const THEMES = { rose: ['Rose poudré', '#c4717f'], laque: ['Rouge laque', '#b3123f'], champagne: ['Champagne', '#b38a4e'], nude: ['Nude', '#a27a64'], prune: ['Prune', '#6d3b8f'] };
+  const THEMES = { bordeaux: ['Bordeaux', '#8a1f3a'], rose: ['Rose poudré', '#c4717f'], laque: ['Rouge laque', '#b3123f'], champagne: ['Champagne', '#b38a4e'], nude: ['Nude', '#a27a64'], prune: ['Prune', '#6d3b8f'] };
   const TITLES = { '/app': 'Tableau de bord', '/app/journal': 'Journal', '/app/abonnements': 'Abonnements', '/app/objectifs': 'Objectif', '/app/parametres': 'Réglages' };
   const options = (map, selected) => Object.entries(map).map(([k, v]) => `<option value="${k}" ${k === selected ? 'selected' : ''}>${esc(v)}</option>`).join('');
   const ico = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -199,7 +199,7 @@
     const base = k.revenue > 0 ? k.revenue : 1;
     const seg = (v) => k.revenue > 0 ? Math.max(0, Math.min(100, (v / base) * 100)) : 0;
     const prevRef = fmtMonth(lastMonths(2)[0]);
-    const periodLabel = dashState.period === 'current' ? `Voici votre mois ${deMonth()}.` : dashState.period === 'previous' ? `Votre mois ${deMonth(new Date(new Date().setMonth(new Date().getMonth() - 1)))}.` : `Du ${fmtDate(d.period.from)} au ${fmtDate(d.period.to)}.`;
+    const periodLabel = dashState.period === 'current' ? `Voici ton mois ${deMonth()}.` : dashState.period === 'previous' ? `Ton mois ${deMonth(new Date(new Date().setMonth(new Date().getMonth() - 1)))}.` : `Du ${fmtDate(d.period.from)} au ${fmtDate(d.period.to)}.`;
     const byCat = {}; for (const t of exp.items) byCat[t.category] = (byCat[t.category] || 0) + t.amount;
     let groups = Object.entries(byCat).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount);
     if (groups.length > 5) { const rest = groups.slice(4).reduce((s, g) => s + g.amount, 0); groups = [...groups.slice(0, 4), { category: 'autres', amount: rest, label: 'Autres' }]; }
@@ -254,18 +254,18 @@
             ${d.goal.monthly_goal > 0 ? `
               <div class="progress"><span style="width:${pct}%"></span></div>
               <div style="display:flex;justify-content:space-between;margin-top:8px" class="small"><span>${fmtMoney(d.goal.achieved)} sur ${fmtMoney(d.goal.monthly_goal)}</span><span class="muted">${Math.round(d.goal.progress_pct)} %</span></div>
-              ${d.goal.remaining_services !== null ? `<p style="margin:10px 0 0;font-family:var(--display);font-size:1.3rem">${d.goal.remaining_services === 0 ? 'Objectif atteint.' : `Encore ${d.goal.remaining_services} prestation${d.goal.remaining_services > 1 ? 's' : ''} à ${fmtMoney(d.goal.average_price)}.`}</p>` : '<p class="small muted" style="margin:8px 0 0">Indiquez un prix moyen pour compter les prestations restantes.</p>'}`
+              ${d.goal.remaining_services !== null ? `<p style="margin:10px 0 0;font-family:var(--display);font-size:1.3rem">${d.goal.remaining_services === 0 ? 'Objectif atteint.' : `Encore ${d.goal.remaining_services} prestation${d.goal.remaining_services > 1 ? 's' : ''} à ${fmtMoney(d.goal.average_price)}.`}</p>` : '<p class="small muted" style="margin:8px 0 0">Indique un prix moyen pour compter les prestations restantes.</p>'}`
             : `<div class="empty"><strong>Pas encore d'objectif.</strong><a href="./app.html#objectifs">Définir un objectif mensuel</a></div>`}
           </section>
           <section class="card poudre">
             <div class="card-head"><h3>Prélèvements cette semaine</h3><a class="small" href="./app.html#abonnements">Abonnements</a></div>
             ${d.subscriptions.upcoming.length ? `<div class="list">${d.subscriptions.upcoming.map((s) => `
               <div class="item due-soon"><div class="main"><div class="title">${esc(s.name)}</div><div class="sub">${s.days_until < 0 ? `En retard de ${-s.days_until} jour${-s.days_until > 1 ? 's' : ''}` : s.days_until === 0 ? 'Aujourd\'hui' : s.days_until === 1 ? 'Demain' : `Dans ${s.days_until} jours`}, le ${fmtDate(s.next_charge_date)}</div></div><div class="amount expense">${fmtMoney(s.amount)}</div></div>`).join('')}</div>`
-            : `<p class="muted small" style="margin:0">Aucun prélèvement dans les sept jours. Vos abonnements actifs : environ ${fmtMoney(d.subscriptions.monthly_cost)} par mois.</p>`}
+            : `<p class="muted small" style="margin:0">Aucun prélèvement dans les sept jours. Tes abonnements actifs : environ ${fmtMoney(d.subscriptions.monthly_cost)} par mois.</p>`}
           </section>
           <section class="card poudre">
             <div class="card-head"><h3>Dernières opérations</h3><a class="small" href="./app.html#journal">Journal</a></div>
-            ${d.recent.length ? `<div class="list">${d.recent.map((t) => txItem(t)).join('')}</div>` : '<div class="empty"><strong>Rien de noté pour l\'instant.</strong>Ajoutez un encaissement ou une dépense avec le bouton +.</div>'}
+            ${d.recent.length ? `<div class="list">${d.recent.map((t) => txItem(t)).join('')}</div>` : '<div class="empty"><strong>Rien de noté pour l\'instant.</strong>Ajoute un encaissement ou une dépense avec le bouton +.</div>'}
           </section>
         </div>
       </div>`;
@@ -314,7 +314,7 @@
       </div>
       <section class="card poudre">
         <div class="card-head"><h3>${d.total} opération${d.total > 1 ? 's' : ''}</h3><button class="btn btn-ghost btn-sm" id="add">${ico('plus')}Ajouter</button></div>
-        ${d.items.length ? `<div class="list" id="tx-list">${byDay.map((g) => `<div class="day-head"><span>${dayLabel(g.date)}</span><span>${fmtDate(g.date)}</span></div>${g.items.map((t) => txItem(t, true)).join('')}`).join('')}</div>` : '<div class="empty"><strong>Aucune opération ici.</strong>Changez les filtres ou ajoutez une opération avec le bouton +.</div>'}
+        ${d.items.length ? `<div class="list" id="tx-list">${byDay.map((g) => `<div class="day-head"><span>${dayLabel(g.date)}</span><span>${fmtDate(g.date)}</span></div>${g.items.map((t) => txItem(t, true)).join('')}`).join('')}</div>` : '<div class="empty"><strong>Aucune opération ici.</strong>Change les filtres ou ajoute une opération avec le bouton +.</div>'}
       </section>`;
     const refresh = () => renderJournal();
     qs('#add').addEventListener('click', () => txForm({}, refresh));
@@ -358,8 +358,8 @@
       </div>
       <section class="card poudre">
         <div class="card-head"><h3>${d.items.length} abonnement${d.items.length > 1 ? 's' : ''}</h3><button class="btn btn-ghost btn-sm" id="add">${ico('plus')}Ajouter</button></div>
-        <p class="small muted" style="margin:0 0 6px">La coche confirme un prélèvement : il passe dans le journal et l'échéance avance. Touchez une ligne pour la modifier.</p>
-        ${d.items.length ? `<div class="list" id="sub-list">${d.items.map(subItem).join('')}</div>` : `<div class="empty"><strong>Aucun abonnement.</strong>Prise de rendez-vous, logiciels, assurance, banque : ajoutez-les pour voir ce qu'ils coûtent vraiment et quand ils tombent.</div>`}
+        <p class="small muted" style="margin:0 0 6px">La coche confirme un prélèvement : il passe dans le journal et l'échéance avance. Touche une ligne pour la modifier.</p>
+        ${d.items.length ? `<div class="list" id="sub-list">${d.items.map(subItem).join('')}</div>` : `<div class="empty"><strong>Aucun abonnement.</strong>Prise de rendez-vous, logiciels, assurance, banque : ajoute-les pour voir ce qu'ils coûtent vraiment et quand ils tombent.</div>`}
       </section>`;
     const refresh = () => renderSubscriptions();
     qs('#add').addEventListener('click', () => subForm({}, refresh));
@@ -391,7 +391,7 @@
     view.innerHTML = `
       <div class="two-col">
         <form class="card poudre" id="goal-form">
-          <div class="card-head"><h3>Votre objectif</h3></div>
+          <div class="card-head"><h3>Ton objectif</h3></div>
           <div class="field"><label>Chiffre d'affaires visé par mois, €</label><input name="monthly_goal" type="number" step="0.01" min="0" inputmode="decimal" value="${s.monthly_goal || ''}" placeholder="3000"></div>
           <div class="field"><label>Prix moyen d'une prestation, €</label><input name="average_price" type="number" step="0.01" min="0" inputmode="decimal" value="${s.average_price || ''}" placeholder="45"></div>
           <div class="error" data-error></div>
@@ -402,9 +402,9 @@
           ${s.monthly_goal > 0 ? `
             <div class="hero-figure"><div class="value num" style="font-size:2.8rem">${fmtMoney(d.goal.achieved)}</div><p class="muted small">sur ${fmtMoney(s.monthly_goal)}, ${Math.round(d.goal.progress_pct)} %</p></div>
             <div class="progress"><span style="width:${pct}%"></span></div>
-            <p style="margin-top:14px;font-family:var(--display);font-size:1.3rem">${d.goal.remaining_services === null ? '<span class="muted small" style="font-family:var(--ui)">Indiquez un prix moyen pour compter les prestations restantes.</span>' : d.goal.remaining_services === 0 ? 'Objectif atteint.' : `Encore ${d.goal.remaining_services} prestation${d.goal.remaining_services > 1 ? 's' : ''} à ${fmtMoney(s.average_price)}.`}</p>
+            <p style="margin-top:14px;font-family:var(--display);font-size:1.3rem">${d.goal.remaining_services === null ? '<span class="muted small" style="font-family:var(--ui)">Indique un prix moyen pour compter les prestations restantes.</span>' : d.goal.remaining_services === 0 ? 'Objectif atteint.' : `Encore ${d.goal.remaining_services} prestation${d.goal.remaining_services > 1 ? 's' : ''} à ${fmtMoney(s.average_price)}.`}</p>
             <p class="small muted" style="margin:0">Arrondi au-dessus de (objectif − encaissé) ÷ prix moyen.</p>`
-          : '<div class="empty"><strong>Pas encore d\'objectif.</strong>Renseignez-le pour suivre le mois.</div>'}
+          : '<div class="empty"><strong>Pas encore d\'objectif.</strong>Renseigne-le pour suivre le mois.</div>'}
         </section>
       </div>`;
     qs('#goal-form').addEventListener('submit', async (e) => {
@@ -426,15 +426,15 @@
         <div class="error" data-error></div><button class="btn btn-ghost btn-sm" type="submit">Enregistrer</button>
       </form>
       <form class="card" id="theme-form">
-        <div class="card-head"><h3>Votre vernis</h3></div>
+        <div class="card-head"><h3>Ton vernis</h3></div>
         <input type="hidden" name="theme" value="${s.theme}">
         <div class="swatches" style="margin-bottom:10px">${Object.entries(THEMES).map(([k, [n, c]]) => `<button type="button" class="swatch ${s.theme === k && !s.accent_color ? 'active' : ''}" data-theme="${k}" style="--c:${c}" title="${n}" aria-label="${n}"></button>`).join('')}</div>
-        <div class="row" style="align-items:end"><div class="field"><label>Ou votre propre teinte</label><input name="accent_color" type="color" value="${s.accent_color || '#c4717f'}"></div><div class="field"><label style="display:flex;align-items:center;gap:8px;color:var(--nacre);min-height:46px"><input type="checkbox" name="use_custom" style="width:auto;min-height:0" ${s.accent_color ? 'checked' : ''}> Utiliser cette teinte</label></div></div>
+        <div class="row" style="align-items:end"><div class="field"><label>Ou ta propre teinte</label><input name="accent_color" type="color" value="${s.accent_color || '#8a1f3a'}"></div><div class="field"><label style="display:flex;align-items:center;gap:8px;color:var(--nacre);min-height:46px"><input type="checkbox" name="use_custom" style="width:auto;min-height:0" ${s.accent_color ? 'checked' : ''}> Utiliser cette teinte</label></div></div>
         <div class="error" data-error></div><button class="btn btn-ghost btn-sm" type="submit">Appliquer</button>
       </form>
       <form class="card poudre" id="rate-form">
         <div class="card-head"><h3>Cotisations estimées</h3></div>
-        <p class="notice" style="margin-bottom:12px">Le taux dépend de votre situation (ACRE, versement libératoire, activité). Vérifiez-le auprès de l'Urssaf : l'application estime, elle ne déclare pas.</p>
+        <p class="notice" style="margin-bottom:12px">Le taux dépend de ta situation (ACRE, versement libératoire, activité). Vérifie-le auprès de l'Urssaf : l'application estime, elle ne déclare pas.</p>
         <div class="field"><label>Taux appliqué au chiffre d'affaires, %</label><input name="rate_pct" type="number" step="0.01" min="0" max="100" inputmode="decimal" value="${(s.contribution_rate * 100).toFixed(2)}"></div>
         <div class="field"><label>Note, par exemple la date de vérification</label><input name="contribution_note" maxlength="500" value="${esc(s.contribution_note || '')}"></div>
         <div class="error" data-error></div><button class="btn btn-ghost btn-sm" type="submit">Enregistrer</button>
@@ -451,8 +451,8 @@
         <a class="btn btn-ghost btn-sm" href="/acces" style="margin-top:8px">Voir mon accès</a>
       </div>
       <div class="card poudre">
-        <div class="card-head"><h3>Vos données</h3></div>
-        <p class="small muted">${STATIC ? 'Vos données restent dans ce navigateur, sur cet appareil. Exportez-les pour les sauvegarder ou les transférer.' : 'Exportez toutes vos opérations et abonnements, ou supprimez définitivement le compte et tout ce qu\'il contient.'}</p>
+        <div class="card-head"><h3>Tes données</h3></div>
+        <p class="small muted">${STATIC ? 'Tes données restent dans ce navigateur, sur cet appareil. Exporte-les pour les sauvegarder ou les transférer.' : 'Exporte toutes tes opérations et abonnements, ou supprime définitivement le compte et tout ce qu\'il contient.'}</p>
         <div class="actions"><a class="btn btn-ghost btn-sm" href="/api/settings/export.csv">Exporter en CSV</a><a class="btn btn-ghost btn-sm" href="/api/settings/export.json">Exporter en JSON</a>${STATIC ? '<label class="btn btn-ghost btn-sm" style="margin:0">Importer un JSON<input type="file" id="import-json" accept="application/json" class="hidden"></label>' : ''}<button class="btn btn-danger btn-sm" id="del-account">${STATIC ? 'Tout effacer' : 'Supprimer mon compte'}</button></div>
       </div>
       <p class="small muted" style="margin:16px 0 0"><a href="./legal/mentions-legales.html">Mentions légales</a>, <a href="./legal/cgu.html">conditions d'utilisation</a>, <a href="./legal/cgv.html">conditions de vente</a>, <a href="./legal/confidentialite.html">confidentialité</a>, <a href="./support.html">support</a>.</p>`;
@@ -469,11 +469,11 @@
     submit('#pwd-form', async (d, f) => { await api('/auth/password', { method: 'POST', body: d }); f.reset(); toast('Mot de passe changé'); });
     const imp = qs('#import-json');
     if (imp) imp.addEventListener('change', async () => { if (!imp.files[0]) return; try { await BBM.local.importJson(imp.files[0]); toast('Données importées'); location.reload(); } catch (ex) { toast(ex.message); } });
-    if (STATIC) { qs('#del-account').addEventListener('click', () => modal(`<h3>Tout effacer</h3><p class="muted small">Toutes les données de ce navigateur seront supprimées. Exportez-les avant si besoin.</p><div class="error" data-error></div>
+    if (STATIC) { qs('#del-account').addEventListener('click', () => modal(`<h3>Tout effacer</h3><p class="muted small">Toutes les données de ce navigateur seront supprimées. Exporte-les avant si besoin.</p><div class="error" data-error></div>
       <div class="actions" style="justify-content:flex-end"><button class="btn btn-ghost" type="button" data-close>Annuler</button><button class="btn btn-danger" type="submit">Effacer</button></div>`,
       async () => { await api('/settings/delete-account', { method: 'POST', body: {} }); location.reload(); })); return; }
-    qs('#del-account').addEventListener('click', () => modal(`<h3>Supprimer le compte</h3><p class="muted small">Définitif : opérations, abonnements et réglages seront effacés. Exportez vos données avant si besoin.</p>
-      <div class="field"><label>Votre mot de passe</label><input name="password" type="password" required></div><div class="error" data-error></div>
+    qs('#del-account').addEventListener('click', () => modal(`<h3>Supprimer le compte</h3><p class="muted small">Définitif : opérations, abonnements et réglages seront effacés. Exporte tes données avant si besoin.</p>
+      <div class="field"><label>Ton mot de passe</label><input name="password" type="password" required></div><div class="error" data-error></div>
       <div class="actions" style="justify-content:flex-end"><button class="btn btn-ghost" type="button" data-close>Annuler</button><button class="btn btn-danger" type="submit">Supprimer définitivement</button></div>`,
     async (d) => { await api('/settings/delete-account', { method: 'POST', body: d }); location.href = '/'; }));
   }

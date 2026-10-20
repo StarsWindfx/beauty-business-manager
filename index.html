@@ -3,10 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>The Beauty Business Manager — ce qu'il vous reste vraiment à la fin du mois</title>
-<meta name="description" content="Pour les prothésistes ongulaires, techniciennes de cils et esthéticiennes indépendantes : encaissements, dépenses, cotisations estimées, objectif et abonnements, sur votre téléphone.">
-<meta name="theme-color" content="#160d14">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..600,0..100;1,9..144,300..600,0..100&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<title>The Beauty Business Manager — gère ton activité beauté en toute simplicité</title>
+<meta name="description" content="Un outil complet pour suivre tes revenus, tes dépenses, tes clientes et tes objectifs, spécialement conçu pour les pros de la beauté.">
+<meta name="theme-color" content="#1a0a0f">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/style.css">
 <link rel="stylesheet" href="./css/landing.css">
 </head>
@@ -15,6 +17,16 @@
   <linearGradient id="bottle-gloss" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".32"/>
   </linearGradient>
+  <symbol id="f-revenus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M14.8 9.2A3.2 3.2 0 0 0 9.4 11v2a3.2 3.2 0 0 0 5.4 1.8M7.8 11.2h5M7.8 13.2h5"/></symbol>
+  <symbol id="f-clientes" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><circle cx="12" cy="13.5" r="1.6"/><path d="M9 18c.6-1.3 1.6-2 3-2s2.4.7 3 2"/></symbol>
+  <symbol id="f-rentabilite" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 7.5h7M8.5 12h2M13.5 12h2M8.5 16h2M13.5 16h2"/></symbol>
+  <symbol id="f-tableaux" viewBox="0 0 24 24"><path d="M4 19.5h16M7 16V11M12 16V7M17 16v-5.5"/><path d="M6 8.5l5-3 5.5 2.5 2.5-2"/></symbol>
+  <symbol id="s-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="s-check" viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></symbol>
+  <symbol id="s-in" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h3.8a1.7 1.7 0 0 1 0 3.4H10"/></symbol>
+  <symbol id="s-out" viewBox="0 0 24 24"><path d="M6 9h12l-1 11H7zM9 9V7a3 3 0 0 1 6 0v2"/></symbol>
+  <symbol id="s-rest" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+  <symbol id="s-bottle" viewBox="0 0 24 24"><path d="M10 3h4v4h-4zM10 7h4l1 3v9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-9z"/></symbol>
 </defs></svg>
 
 <header class="app-header"><div class="container">
@@ -24,173 +36,143 @@
 
 <main>
   <section class="hero container">
-    <div class="hero-copy">
-      <h1>Ce qu'il vous reste vraiment à la fin du mois.</h1>
-      <p class="who">Pour les prothésistes ongulaires, techniciennes de cils et esthéticiennes à leur compte.</p>
-      <div class="hero-cta"><a class="btn btn-primary btn-lg" href="./app.html">Ouvrir l'application</a></div>
-      <div class="vernis" role="group" aria-label="Choisir votre vernis">
-        <span class="cap">Votre vernis</span>
-        <button class="bottle active" data-theme="rose" style="--c:#c4717f" title="Rose poudré" aria-label="Rose poudré"><svg viewBox="0 0 52 96" aria-hidden="true"><rect x="15" y="0" width="22" height="41" rx="5" fill="#15090f"/><rect x="19" y="3" width="3" height="33" rx="1.5" fill="#fff" opacity=".16"/><rect x="20" y="39" width="12" height="6" fill="#2a1a26"/><rect x="5" y="43" width="42" height="53" rx="11" style="fill:var(--c)"/><rect x="5" y="43" width="42" height="53" rx="11" fill="url(#bottle-gloss)"/><rect x="11" y="50" width="6" height="38" rx="3" fill="#fff" opacity=".28"/></svg><i></i></button>
+    <h1>Gère ton activité beauté en toute simplicité</h1>
+    <p class="who">Un outil complet pour suivre tes revenus, tes dépenses, tes clientes et tes objectifs, spécialement conçu pour les pros de la beauté.</p>
+    <a class="btn btn-primary btn-lg" href="./app.html">Ouvrir l'application</a>
+    <ul class="features">
+      <li><i><svg><use href="#f-revenus"/></svg></i><span>Suivi des revenus et dépenses</span></li>
+      <li><i><svg><use href="#f-clientes"/></svg></i><span>Gestion des clientes et rendez-vous</span></li>
+      <li><i><svg><use href="#f-rentabilite"/></svg></i><span>Calcul de la rentabilité</span></li>
+      <li><i><svg><use href="#f-tableaux"/></svg></i><span>Tableaux de bord simples et visuels</span></li>
+    </ul>
+  </section>
+
+  <section class="claim container">
+    <h2>Notez ce qui rentre et ce qui sort, tout est calculé automatiquement.</h2>
+  </section>
+
+  <section class="nuancier container" aria-label="Les écrans de l'application">
+    <div class="rail">
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
+          <div class="s-top"><span class="s-brand">The Beauty Business Manager</span><span class="s-avatar">A</span></div>
+          <div class="s-greet"><b>Bonjour, Anaïs !</b><small>Voici ton mois d'octobre.</small></div>
+          <div class="s-card dark">
+            <div class="s-lede">Reste estimé</div>
+            <div class="s-value foil" id="demo-value">0 €</div>
+            <div class="lacquer" id="demo-bar"><span class="seg-dep" style="width:0"></span><span class="seg-cot" style="width:0"></span><span class="seg-reste" style="width:0"></span></div>
+            <div class="s-legend"><span style="--c:var(--laque)">Dépenses <b>409,60 €</b></span><span style="--c:var(--or)">Reste <b>1 284,60 €</b></span></div>
+          </div>
+          <div class="s-kpis">
+            <div class="s-card s-kpi in"><div class="k">Encaissé <svg><use href="#s-in"/></svg></div><div class="v">2 150 €</div><div class="d">↑ +18 % vs sept.</div></div>
+            <div class="s-card s-kpi out"><div class="k">Dépenses <svg><use href="#s-out"/></svg></div><div class="v">409,60 €</div><div class="d">↓ −6 % vs sept.</div></div>
+            <div class="s-card s-kpi"><div class="k">Cotisations <svg><use href="#s-rest"/></svg></div><div class="v">455,80 €</div><div class="d">21,2 % du CA</div></div>
+            <div class="s-card s-kpi"><div class="k">Prestations <svg><use href="#s-bottle"/></svg></div><div class="v">48</div><div class="d">↑ +12 % vs sept.</div></div>
+          </div>
+          <nav class="s-tabs2"><span class="on">Accueil</span><span>Journal</span><span class="plus"><svg><use href="#s-plus"/></svg></span><span>Abonnements</span><span>Plus</span></nav>
+        </div></div>
+        <figcaption><b>Ce mois</b><span>Ce qu'il te reste vraiment, en un regard.</span></figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
+          <div class="s-top"><b class="s-title">Journal</b><span class="s-avatar">A</span></div>
+          <div class="s-filters"><div class="s-input ph">Rechercher</div><div class="s-input">Filtres</div></div>
+          <div class="s-kpis" style="margin-top:.6em"><div class="s-card s-kpi in"><div class="k">Encaissé</div><div class="v">2 150 €</div></div><div class="s-card s-kpi out"><div class="k">Dépensé</div><div class="v">409,60 €</div></div></div>
+          <div class="s-card">
+            <div class="s-day"><span>Aujourd'hui</span><span>20/10</span></div>
+            <div class="s-item"><div class="t"><b>Pose gel complète</b><small>Prestation</small></div><div class="a in">+45,00 €</div></div>
+            <div class="s-item"><div class="t"><b>Gel builder clear</b><small>Fournitures</small></div><div class="a out">−32,90 €</div></div>
+            <div class="s-day"><span>Hier</span><span>19/10</span></div>
+            <div class="s-item"><div class="t"><b>Dépose + pose</b><small>Prestation</small></div><div class="a in">+55,00 €</div></div>
+            <div class="s-item"><div class="t"><b>Nail art, 4 ongles</b><small>Prestation</small></div><div class="a in">+12,00 €</div></div>
+            <div class="s-item"><div class="t"><b>Planity</b><small>Abonnement</small></div><div class="a out">−19,90 €</div></div>
+          </div>
+          <nav class="s-tabs2"><span>Accueil</span><span class="on">Journal</span><span class="plus"><svg><use href="#s-plus"/></svg></span><span>Abonnements</span><span>Plus</span></nav>
+        </div></div>
+        <figcaption><b>Le journal</b><span>Une opération en dix secondes, entre deux clientes.</span></figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
+          <div class="s-top"><b class="s-title">Abonnements</b><span class="s-avatar">A</span></div>
+          <div class="s-kpis" style="margin-top:.2em"><div class="s-card s-kpi out"><div class="k">Par mois</div><div class="v">55,39 €</div></div><div class="s-card s-kpi out"><div class="k">Par an</div><div class="v">664,68 €</div></div></div>
+          <div class="s-card">
+            <div class="s-item due"><div class="t"><b>Planity</b><small>Le 23/10, dans 3 j</small></div><div class="a out">19,90 €</div><span class="ck"><svg><use href="#s-check"/></svg></span></div>
+            <div class="s-item due"><div class="t"><b>Canva</b><small>Le 25/10, dans 5 j</small></div><div class="a out">11,99 €</div><span class="ck"><svg><use href="#s-check"/></svg></span></div>
+            <div class="s-item"><div class="t"><b>Assurance RC pro</b><small>Le 02/11</small></div><div class="a out">14,50 €</div><span class="ck"><svg><use href="#s-check"/></svg></span></div>
+            <div class="s-item"><div class="t"><b>Banque</b><small>Le 05/11</small></div><div class="a out">9,00 €</div><span class="ck"><svg><use href="#s-check"/></svg></span></div>
+          </div>
+          <nav class="s-tabs2"><span>Accueil</span><span>Journal</span><span class="plus"><svg><use href="#s-plus"/></svg></span><span class="on">Abonnements</span><span>Plus</span></nav>
+        </div></div>
+        <figcaption><b>Les abonnements</b><span>Ce qu'ils coûtent vraiment, et quand ils tombent.</span></figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
+          <div class="s-top"><b class="s-title">Objectif</b><span class="s-avatar">A</span></div>
+          <div class="s-card">
+            <div class="s-field"><label>Chiffre d'affaires visé par mois, €</label><div class="s-input">3 000</div></div>
+            <div class="s-field"><label>Prix moyen d'une prestation, €</label><div class="s-input">45</div></div>
+            <span class="s-btn pri">Enregistrer</span>
+          </div>
+          <div class="s-card dark">
+            <div class="s-h3">Octobre</div>
+            <div class="s-value foil" style="font-size:2.3em">2 150 €</div>
+            <div class="s-note">sur 3 000 €, 72 %</div>
+            <div class="progress"><span style="width:72%"></span></div>
+            <div class="s-line">Encore 19 prestations à 45 €.</div>
+          </div>
+          <nav class="s-tabs2"><span>Accueil</span><span>Journal</span><span class="plus"><svg><use href="#s-plus"/></svg></span><span>Abonnements</span><span class="on">Plus</span></nav>
+        </div></div>
+        <figcaption><b>L'objectif</b><span>Une stratégie précise grâce à des outils de calculs performants.</span></figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
+          <div class="s-top"><b class="s-title">Réglages</b><span class="s-avatar">A</span></div>
+          <div class="s-card">
+            <div class="s-h3">Profil</div>
+            <div class="s-field"><label>Prénom</label><div class="s-input">Anaïs</div></div>
+            <span class="s-btn">Enregistrer</span>
+          </div>
+          <div class="s-card dark">
+            <div class="s-h3">Ton vernis</div>
+            <div class="s-swatches"><span class="s-sw on" style="--c:#8a1f3a"></span><span class="s-sw" style="--c:#c4717f"></span><span class="s-sw" style="--c:#b3123f"></span><span class="s-sw" style="--c:#b38a4e"></span><span class="s-sw" style="--c:#a27a64"></span><span class="s-sw" style="--c:#6d3b8f"></span></div>
+          </div>
+          <div class="s-card">
+            <div class="s-h3">Cotisations estimées</div>
+            <div class="s-field"><label>Taux appliqué, %</label><div class="s-input">21,20</div></div>
+          </div>
+          <nav class="s-tabs2"><span>Accueil</span><span>Journal</span><span class="plus"><svg><use href="#s-plus"/></svg></span><span>Abonnements</span><span class="on">Plus</span></nav>
+        </div></div>
+        <figcaption><b>Les réglages</b><span>Personnalisable à l'infini.</span></figcaption>
+      </figure>
+    </div>
+    <p class="hint">Faites défiler</p>
+
+    <div class="vernis" role="group" aria-label="Changer la teinte">
+      <span class="cap">Change la teinte</span>
+      <div class="bottles">
+        <button class="bottle active" data-theme="bordeaux" style="--c:#8a1f3a" title="Bordeaux" aria-label="Bordeaux"><svg viewBox="0 0 52 96" aria-hidden="true"><rect x="15" y="0" width="22" height="41" rx="5" fill="#15090f"/><rect x="19" y="3" width="3" height="33" rx="1.5" fill="#fff" opacity=".16"/><rect x="20" y="39" width="12" height="6" fill="#2a1a26"/><rect x="5" y="43" width="42" height="53" rx="11" style="fill:var(--c)"/><rect x="5" y="43" width="42" height="53" rx="11" fill="url(#bottle-gloss)"/><rect x="11" y="50" width="6" height="38" rx="3" fill="#fff" opacity=".28"/></svg><i></i></button>
+        <button class="bottle" data-theme="rose" style="--c:#c4717f" title="Rose poudré" aria-label="Rose poudré"><svg viewBox="0 0 52 96" aria-hidden="true"><rect x="15" y="0" width="22" height="41" rx="5" fill="#15090f"/><rect x="19" y="3" width="3" height="33" rx="1.5" fill="#fff" opacity=".16"/><rect x="20" y="39" width="12" height="6" fill="#2a1a26"/><rect x="5" y="43" width="42" height="53" rx="11" style="fill:var(--c)"/><rect x="5" y="43" width="42" height="53" rx="11" fill="url(#bottle-gloss)"/><rect x="11" y="50" width="6" height="38" rx="3" fill="#fff" opacity=".28"/></svg><i></i></button>
         <button class="bottle" data-theme="laque" style="--c:#b3123f" title="Rouge laque" aria-label="Rouge laque"><svg viewBox="0 0 52 96" aria-hidden="true"><rect x="15" y="0" width="22" height="41" rx="5" fill="#15090f"/><rect x="19" y="3" width="3" height="33" rx="1.5" fill="#fff" opacity=".16"/><rect x="20" y="39" width="12" height="6" fill="#2a1a26"/><rect x="5" y="43" width="42" height="53" rx="11" style="fill:var(--c)"/><rect x="5" y="43" width="42" height="53" rx="11" fill="url(#bottle-gloss)"/><rect x="11" y="50" width="6" height="38" rx="3" fill="#fff" opacity=".28"/></svg><i></i></button>
         <button class="bottle" data-theme="champagne" style="--c:#b38a4e" title="Champagne" aria-label="Champagne"><svg viewBox="0 0 52 96" aria-hidden="true"><rect x="15" y="0" width="22" height="41" rx="5" fill="#15090f"/><rect x="19" y="3" width="3" height="33" rx="1.5" fill="#fff" opacity=".16"/><rect x="20" y="39" width="12" height="6" fill="#2a1a26"/><rect x="5" y="43" width="42" height="53" rx="11" style="fill:var(--c)"/><rect x="5" y="43" width="42" height="53" rx="11" fill="url(#bottle-gloss)"/><rect x="11" y="50" width="6" height="38" rx="3" fill="#fff" opacity=".28"/></svg><i></i></button>
         <button class="bottle" data-theme="nude" style="--c:#a27a64" title="Nude" aria-label="Nude"><svg viewBox="0 0 52 96" aria-hidden="true"><rect x="15" y="0" width="22" height="41" rx="5" fill="#15090f"/><rect x="19" y="3" width="3" height="33" rx="1.5" fill="#fff" opacity=".16"/><rect x="20" y="39" width="12" height="6" fill="#2a1a26"/><rect x="5" y="43" width="42" height="53" rx="11" style="fill:var(--c)"/><rect x="5" y="43" width="42" height="53" rx="11" fill="url(#bottle-gloss)"/><rect x="11" y="50" width="6" height="38" rx="3" fill="#fff" opacity=".28"/></svg><i></i></button>
         <button class="bottle" data-theme="prune" style="--c:#6d3b8f" title="Prune" aria-label="Prune"><svg viewBox="0 0 52 96" aria-hidden="true"><rect x="15" y="0" width="22" height="41" rx="5" fill="#15090f"/><rect x="19" y="3" width="3" height="33" rx="1.5" fill="#fff" opacity=".16"/><rect x="20" y="39" width="12" height="6" fill="#2a1a26"/><rect x="5" y="43" width="42" height="53" rx="11" style="fill:var(--c)"/><rect x="5" y="43" width="42" height="53" rx="11" fill="url(#bottle-gloss)"/><rect x="11" y="50" width="6" height="38" rx="3" fill="#fff" opacity=".28"/></svg><i></i></button>
       </div>
     </div>
-
-    <div class="hero-visual" aria-label="Le tableau de bord du mois, dans l'application">
-      <svg class="stroke" viewBox="0 0 1200 420" aria-hidden="true">
-        <defs>
-          <linearGradient id="lq" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" style="stop-color:var(--laque-2)"/>
-            <stop offset=".32" style="stop-color:var(--laque)"/>
-            <stop offset="1" style="stop-color:var(--laque-deep)"/>
-          </linearGradient>
-          <linearGradient id="lqd" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" style="stop-color:var(--laque)"/>
-            <stop offset="1" style="stop-color:var(--laque-deep)"/>
-          </linearGradient>
-          <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
-          </linearGradient>
-          <filter id="soft" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="5"/></filter>
-          <filter id="halo" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="34"/></filter>
-        </defs>
-        <path style="fill:var(--laque)" opacity=".7" filter="url(#halo)" d="M40 212C58 124 170 92 300 110 450 130 600 98 760 116 900 132 1040 106 1180 114 1150 150 1040 162 900 192 760 222 600 252 420 264 260 274 120 322 60 282 22 256 24 240 40 212Z"/>
-        <path fill="url(#lqd)" transform="rotate(16 559 258)" d="M548 258C544 290 534 316 538 352 542 382 580 382 582 352 584 322 568 292 570 258Z"/>
-        <path fill="url(#lqd)" transform="rotate(16 308 266)" d="M302 266C300 284 294 298 297 316 299 332 319 332 320 316 321 300 313 286 314 266Z"/>
-        <path fill="url(#lq)" d="M40 212C58 124 170 92 300 110 450 130 600 98 760 116 900 132 1040 106 1180 114 1150 150 1040 162 900 192 760 222 600 252 420 264 260 274 120 322 60 282 22 256 24 240 40 212Z"/>
-        <path fill="url(#gloss)" filter="url(#soft)" d="M110 170C200 130 320 126 440 141 520 150 600 136 700 130 640 150 540 166 440 160 330 153 210 160 130 184Z"/>
-        <path fill="url(#gloss)" filter="url(#soft)" opacity=".6" d="M800 134C880 124 980 122 1120 118 1040 134 930 142 806 146Z"/>
-      </svg>
-
-      <div class="phone"><div class="screen">
-        <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
-        <div class="s-head"><b>Octobre</b><span class="s-chip">Ce mois</span></div>
-        <div class="s-lede">Reste estimé</div>
-        <div class="s-value foil" id="demo-value">0 €</div>
-        <div class="lacquer" id="demo-bar"><span class="seg-dep" style="width:0"></span><span class="seg-cot" style="width:0"></span><span class="seg-reste" style="width:0"></span></div>
-        <div class="s-legend">
-          <span style="--c:var(--laque)">Dépenses <b>409,60 €</b></span>
-          <span style="--c:color-mix(in srgb, var(--laque) 45%, var(--encre))">Cotisations <b>455,80 €</b></span>
-          <span style="--c:var(--or)">Reste <b>1 284,60 €</b></span>
-        </div>
-        <div class="s-bloc">
-          <div class="s-h3">Objectif d'octobre <a>Modifier</a></div>
-          <div class="progress"><span style="width:72%"></span></div>
-          <div class="s-row"><span>2 150 € sur 3 000 €</span><span class="muted">72 %</span></div>
-          <div class="s-line">Encore 19 poses à 45 €.</div>
-        </div>
-        <div class="s-bloc">
-          <div class="s-h3">Prélèvements cette semaine <a>Abonnements</a></div>
-          <div class="s-item due"><div class="t"><b>Planity</b><small>Dans 3 jours, le 23/10</small></div><div class="a out">19,90 €</div></div>
-          <div class="s-item due"><div class="t"><b>Canva</b><small>Dans 5 jours, le 25/10</small></div><div class="a out">11,99 €</div></div>
-        </div>
-        <div class="s-fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
-        <nav class="s-tabs"><span class="on">Ce mois</span><span>Journal</span><span>Abonnements</span><span>Objectif</span><span>Réglages</span></nav>
-      </div></div>
-    </div>
-  </section>
-
-  <section class="claim container">
-    <h2>Noter ce qui rentre, noter ce qui sort. Le reste se calcule.</h2>
-  </section>
-
-  <section class="nuancier container" aria-label="Les écrans de l'application">
-    <div class="rail">
-      <figure data-theme="rose">
-        <div class="phone"><div class="screen">
-          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
-          <div class="s-head"><b>Journal</b><span class="s-btn pri">Ajouter</span></div>
-          <div class="s-filters"><div class="s-input">Tout <span class="car"></span></div><div class="s-input">Toutes <span class="car"></span></div></div>
-          <div class="s-input ph">Rechercher</div>
-          <div class="s-figures"><div class="s-fig in"><div class="k">Encaissé</div><div class="v">2 150 €</div></div><div class="s-fig out"><div class="k">Dépensé</div><div class="v">409,60 €</div></div></div>
-          <div class="s-item"><div class="t"><b>Pose gel complète</b><small>20/10, Prestation</small></div><div class="a in">+45,00 €</div></div>
-          <div class="s-item"><div class="t"><b>Gel builder clear</b><small>19/10, Fournitures</small></div><div class="a out">−32,90 €</div></div>
-          <div class="s-item"><div class="t"><b>Dépose + pose</b><small>18/10, Prestation</small></div><div class="a in">+55,00 €</div></div>
-          <div class="s-item"><div class="t"><b>Nail art, 4 ongles</b><small>18/10, Prestation</small></div><div class="a in">+12,00 €</div></div>
-          <div class="s-item"><div class="t"><b>Planity</b><small>17/10, Abonnement</small></div><div class="a out">−19,90 €</div></div>
-          <div class="s-item"><div class="t"><b>Remplissage</b><small>17/10, Prestation</small></div><div class="a in">+38,00 €</div></div>
-          <div class="s-fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
-          <nav class="s-tabs"><span>Ce mois</span><span class="on">Journal</span><span>Abonnements</span><span>Objectif</span><span>Réglages</span></nav>
-        </div></div>
-        <figcaption><b>Le journal</b><span>Une opération en dix secondes, entre deux clientes.</span></figcaption>
-      </figure>
-
-      <figure data-theme="champagne">
-        <div class="phone"><div class="screen">
-          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
-          <div class="s-head"><b>Abonnements</b><span class="s-btn pri">Ajouter</span></div>
-          <div class="s-figures"><div class="s-fig out"><div class="k">Par mois</div><div class="v">55,39 €</div></div><div class="s-fig out"><div class="k">Par an</div><div class="v">664,68 €</div></div></div>
-          <div class="s-item due"><div class="t"><b>Planity</b><small>Chaque mois, le 23/10 (dans 3 j)</small></div><div class="a out">19,90 €</div><span class="ck"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg></span></div>
-          <div class="s-item due"><div class="t"><b>Canva</b><small>Chaque mois, le 25/10 (dans 5 j)</small></div><div class="a out">11,99 €</div><span class="ck"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg></span></div>
-          <div class="s-item"><div class="t"><b>Assurance RC pro</b><small>Chaque mois, le 02/11</small></div><div class="a out">14,50 €</div><span class="ck"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg></span></div>
-          <div class="s-item"><div class="t"><b>Banque</b><small>Chaque mois, le 05/11</small></div><div class="a out">9,00 €</div><span class="ck"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg></span></div>
-          <div class="s-item"><div class="t"><b>Site vitrine</b><small>Chaque année, le 14/02</small></div><div class="a out">96,00 €</div><span class="ck"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg></span></div>
-          <div class="s-fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
-          <nav class="s-tabs"><span>Ce mois</span><span>Journal</span><span class="on">Abonnements</span><span>Objectif</span><span>Réglages</span></nav>
-        </div></div>
-        <figcaption><b>Les abonnements</b><span>Ce qu'ils coûtent vraiment, et quand ils tombent.</span></figcaption>
-      </figure>
-
-      <figure data-theme="prune">
-        <div class="phone"><div class="screen">
-          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
-          <div class="s-head"><b>Objectif</b></div>
-          <div class="s-field"><label>Chiffre d'affaires visé par mois, €</label><div class="s-input">3 000</div></div>
-          <div class="s-field"><label>Prix moyen d'une prestation, €</label><div class="s-input">45</div></div>
-          <div class="s-actions"><span class="s-btn pri">Enregistrer</span></div>
-          <div class="s-bloc s-goal">
-            <div class="s-h3">Octobre</div>
-            <div class="s-value" style="color:var(--or-2)">2 150 €</div>
-            <div class="s-note">sur 3 000 €, 72 %</div>
-            <div class="progress"><span style="width:72%"></span></div>
-            <div class="s-line">Encore 19 prestations à 45 €.</div>
-          </div>
-          <div class="s-bloc">
-            <div class="s-h3">Six derniers mois</div>
-            <div class="s-bars">
-              <div class="s-bar"><div class="c"><i class="r" style="height:58%"></i><i class="e" style="height:22%"></i></div><small>mai</small></div>
-              <div class="s-bar"><div class="c"><i class="r" style="height:64%"></i><i class="e" style="height:18%"></i></div><small>juin</small></div>
-              <div class="s-bar"><div class="c"><i class="r" style="height:80%"></i><i class="e" style="height:30%"></i></div><small>juil.</small></div>
-              <div class="s-bar"><div class="c"><i class="r" style="height:46%"></i><i class="e" style="height:16%"></i></div><small>août</small></div>
-              <div class="s-bar"><div class="c"><i class="r" style="height:88%"></i><i class="e" style="height:26%"></i></div><small>sept.</small></div>
-              <div class="s-bar"><div class="c"><i class="r" style="height:70%"></i><i class="e" style="height:14%"></i></div><small>oct.</small></div>
-            </div>
-          </div>
-          <nav class="s-tabs"><span>Ce mois</span><span>Journal</span><span>Abonnements</span><span class="on">Objectif</span><span>Réglages</span></nav>
-        </div></div>
-        <figcaption><b>L'objectif</b><span>Un chiffre visé, un prix moyen : il reste 19 poses.</span></figcaption>
-      </figure>
-
-      <figure data-theme="nude">
-        <div class="phone"><div class="screen">
-          <div class="sb"><span>9:41</span><span class="island"></span><span class="ic"><b></b></span></div>
-          <div class="s-head"><b>Réglages</b></div>
-          <div class="s-h3">Votre vernis</div>
-          <div class="s-swatches"><span class="s-sw" style="--c:#b3123f"></span><span class="s-sw" style="--c:#c4717f"></span><span class="s-sw" style="--c:#b38a4e"></span><span class="s-sw on" style="--c:#a27a64"></span><span class="s-sw" style="--c:#6d3b8f"></span></div>
-          <div class="s-field"><label>Ou votre propre teinte</label><div class="s-input"><span style="display:inline-block;width:1.4em;height:1.4em;border-radius:.3em;background:#a27a64"></span><span style="flex:1;margin-left:.6em">#a27a64</span></div></div>
-          <div class="s-actions"><span class="s-btn">Appliquer</span></div>
-          <div class="s-bloc">
-            <div class="s-h3">Cotisations estimées</div>
-            <div class="s-field"><label>Taux appliqué au chiffre d'affaires, %</label><div class="s-input">21,20</div></div>
-          </div>
-          <div class="s-bloc">
-            <div class="s-h3">Vos données</div>
-            <div class="s-actions"><span class="s-btn">Exporter en CSV</span><span class="s-btn">Exporter en JSON</span><span class="s-btn">Importer</span></div>
-          </div>
-          <nav class="s-tabs"><span>Ce mois</span><span>Journal</span><span>Abonnements</span><span>Objectif</span><span class="on">Réglages</span></nav>
-        </div></div>
-        <figcaption><b>Votre vernis</b><span>Cinq teintes, ou la vôtre. Vos données restent à vous.</span></figcaption>
-      </figure>
-    </div>
-    <p class="hint">Faites défiler</p>
   </section>
 
   <section class="offer container">
     <div class="amount foil">10<small>€</small></div>
     <p class="once">Paiement unique.</p>
-    <a class="btn btn-primary btn-lg" href="./app.html">Ouvrir l'application</a>
+    <a class="btn btn-primary btn-lg btn-caps" href="./app.html">Commencer maintenant</a>
     <p class="fine"><a href="./legal/cgv.html">Conditions de vente</a></p>
   </section>
 </main>
