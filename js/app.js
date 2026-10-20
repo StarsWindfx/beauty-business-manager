@@ -248,7 +248,7 @@
         <div class="figure out"><div class="k">Par mois, abonnements actifs</div><div class="v">${fmtMoney(d.totals.monthly)}</div></div>
         <div class="figure out"><div class="k">Par an</div><div class="v">${fmtMoney(d.totals.yearly)}</div></div>
       </div>
-      <p class="small muted">Un prélèvement ne compte comme dépense que lorsque vous le confirmez avec la coche : il passe alors dans le journal et l'échéance avance.</p>
+      <p class="small muted">La coche confirme un prélèvement : il passe dans le journal et l'échéance avance.</p>
       ${d.items.length ? `<div class="list" id="sub-list">${d.items.map(subItem).join('')}</div>` : `<div class="empty"><strong>Aucun abonnement.</strong>Prise de rendez-vous, logiciels, assurance, banque : ajoutez-les pour voir ce qu'ils coûtent vraiment et quand ils tombent.</div>`}`;
     const refresh = () => renderSubscriptions();
     qs('#add').addEventListener('click', () => subForm({}, refresh));
@@ -315,7 +315,7 @@
       </form>
       <form class="bloc" id="rate-form">
         <h3>Cotisations estimées</h3>
-        <p class="notice" style="margin-bottom:12px">Le taux dépend de votre situation (ACRE, versement libératoire, nature de l'activité) et des règles en vigueur. Vérifiez-le auprès de l'Urssaf ou d'un professionnel : l'application estime, elle ne déclare pas.</p>
+        <p class="notice" style="margin-bottom:12px">Le taux dépend de votre situation (ACRE, versement libératoire, activité). Vérifiez-le auprès de l'Urssaf : l'application estime, elle ne déclare pas.</p>
         <div class="field"><label>Taux appliqué au chiffre d'affaires, %</label><input name="rate_pct" type="number" step="0.01" min="0" max="100" inputmode="decimal" value="${(s.contribution_rate * 100).toFixed(2)}"></div>
         <div class="field"><label>Note, par exemple la date de vérification</label><input name="contribution_note" maxlength="500" value="${esc(s.contribution_note || '')}"></div>
         <div class="error" data-error></div><button class="btn btn-ghost btn-sm" type="submit">Enregistrer</button>
