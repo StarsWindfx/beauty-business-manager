@@ -15,6 +15,7 @@
   --laque: #b3123f;        /* thème par défaut : rouge laque */
   --laque-2: #e8457a;
   --laque-text: #ffffff;
+  --laque-deep: color-mix(in srgb, var(--laque) 58%, #1a0610);
   --alerte: #e3a64a;
   --focus: var(--or);
   --r: 14px;
@@ -22,17 +23,27 @@
   --ui: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: dark;
 }
-[data-theme="rose"]      { --laque: #c24f7e; --laque-2: #ef9ec0; }
+[data-theme="rose"]      { --laque: #c24f7e; --laque-2: #ef9ec0; --laque-text: #ffffff; }
 [data-theme="champagne"] { --laque: #b38a4e; --laque-2: #e9c98c; --laque-text: #1d1308; }
 [data-theme="nude"]      { --laque: #a27a64; --laque-2: #dcb9a4; --laque-text: #1d1308; }
-[data-theme="prune"]     { --laque: #6d3b8f; --laque-2: #b58ad8; }
+[data-theme="prune"]     { --laque: #6d3b8f; --laque-2: #b58ad8; --laque-text: #ffffff; }
+[data-theme="laque"]     { --laque: #b3123f; --laque-2: #e8457a; --laque-text: #ffffff; }
+
+/* Changer de vernis se fait en fondu, sur toute la page */
+@property --laque { syntax: '<color>'; inherits: true; initial-value: #b3123f; }
+@property --laque-2 { syntax: '<color>'; inherits: true; initial-value: #e8457a; }
+@property --laque-text { syntax: '<color>'; inherits: true; initial-value: #ffffff; }
+html, [data-theme] { transition: --laque .7s ease, --laque-2 .7s ease, --laque-text .7s ease; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; font-family: var(--ui); font-size: 16px; line-height: 1.5; color: var(--nacre);
-  background: var(--velours);
-  background-image: radial-gradient(900px 500px at 50% -200px, #2a1826 0%, transparent 70%);
+  background-color: var(--velours);
+  /* velours : un grain fin sur la lumière du haut */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .92 0 0 0 0 .95 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(900px 520px at 50% -200px, #2d1a28 0%, transparent 70%);
   min-height: 100dvh;
 }
 a { color: var(--or); text-underline-offset: 3px; }
@@ -78,7 +89,12 @@ p { margin: 0 0 1em; }
 .hero-figure { padding: 10px 0 6px; }
 .hero-figure .lede { color: var(--nacre-2); font-size: .95rem; margin: 0; }
 .hero-figure .value { font-family: var(--display); font-size: clamp(3rem, 12vw, 4.6rem); line-height: 1; font-weight: 400; letter-spacing: -.02em; font-variation-settings: 'SOFT' 100, 'opsz' 144; font-variant-numeric: tabular-nums; margin: .05em 0 .1em; }
-.hero-figure .value.negative { color: var(--laque-2); }
+/* Or feuille : réservé au chiffre du mois et au prix */
+.foil, .hero-figure .value {
+  background: linear-gradient(178deg, #f8e7bf 0%, #e6c98a 34%, #c99d55 52%, #e2c27f 66%, #f3dfae 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-figure .value.negative { background: none; color: var(--laque-2); }
 .lacquer { height: 22px; border-radius: 11px; background: var(--encre); display: flex; overflow: hidden;
   box-shadow: inset 0 2px 5px rgba(0,0,0,.5); position: relative; }
 .lacquer::after { content: ''; position: absolute; inset: 2px 3px auto 3px; height: 7px; border-radius: 6px; background: linear-gradient(to bottom, rgba(255,255,255,.28), rgba(255,255,255,0)); pointer-events: none; }
@@ -168,27 +184,12 @@ input[type="color"] { padding: 4px; height: 44px; }
 .bars .bar .col.r { background: var(--or); } .bars .bar .col.e { background: var(--laque); }
 .bars .bar .lbl { font-size: .75rem; color: var(--sourdine); }
 
-/* Page de vente */
-.hero { padding: 54px 0 26px; }
-.hero h1 { font-size: clamp(2.6rem, 9vw, 5rem); font-weight: 400; line-height: .98; max-width: 11ch; font-variation-settings: 'SOFT' 100, 'opsz' 144; }
-.hero h1 em { font-style: italic; font-weight: 300; }
-.hero .lede { font-size: 1.1rem; color: var(--nacre-2); max-width: 36ch; margin: 18px 0 22px; }
-.demo { margin: 36px 0 0; padding: 22px; border: 1px solid var(--filet); border-radius: var(--r); background: var(--velours-2); max-width: 480px; }
-.section { padding: 34px 0; border-top: 1px solid var(--filet); }
-.section h2 { font-size: 1.9rem; max-width: 20ch; }
-.prose { max-width: 58ch; color: var(--nacre-2); }
-.capabilities { list-style: none; padding: 0; margin: 18px 0 0; }
-.capabilities li { padding: 14px 0; border-top: 1px solid var(--filet); display: grid; grid-template-columns: 1fr; gap: 4px; }
-.capabilities li strong { font-family: var(--display); font-weight: 500; font-size: 1.2rem; }
-.capabilities li span { color: var(--nacre-2); max-width: 56ch; }
-.offer { display: grid; gap: 18px; align-items: start; }
-.offer .amount { font-family: var(--display); font-size: 4.2rem; line-height: 1; font-weight: 300; font-variation-settings: 'SOFT' 100, 'opsz' 144; }
-.offer .amount sup { font-size: .4em; vertical-align: .9em; font-weight: 400; color: var(--or); }
+/* Page de vente : voir landing.css. Questions dépliables (pages simples) */
 details { border-top: 1px solid var(--filet); padding: 12px 0; }
 summary { cursor: pointer; font-family: var(--display); font-size: 1.1rem; font-weight: 500; }
 details p { margin: 8px 0 0; color: var(--nacre-2); max-width: 60ch; }
 .footer { border-top: 1px solid var(--filet); padding: 24px 0 36px; color: var(--sourdine); font-size: .85rem; }
-.footer a { color: var(--nacre-2); margin-right: 14px; }
+.footer a { color: var(--nacre-2); }
 
 /* Pages simples */
 .auth-wrap { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px 18px; }
@@ -211,6 +212,4 @@ details p { margin: 8px 0 0; color: var(--nacre-2); max-width: 60ch; }
   .fab { bottom: 30px; right: 30px; }
   .figures { grid-template-columns: repeat(3, 1fr); }
   .two-col { display: grid; grid-template-columns: 1.25fr 1fr; gap: 0 40px; align-items: start; }
-  .capabilities li { grid-template-columns: 220px 1fr; gap: 20px; }
-  .offer { grid-template-columns: 1fr 1fr; }
 }

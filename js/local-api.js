@@ -6,10 +6,12 @@
   const today = () => new Date().toISOString().slice(0, 10);
   const now = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
 
+  /* Le vernis choisi sur la page d'accueil est repris à la première ouverture. */
+  const firstTheme = () => { try { const t = JSON.parse(localStorage.getItem('bbm_theme') || 'null'); return t && ['laque', 'rose', 'champagne', 'nude', 'prune'].includes(t.theme) ? t.theme : 'laque'; } catch { return 'laque'; } };
   const fresh = () => ({
     seq: 1,
     user: { id: 1, email: 'moi@local', name: '', business_name: '', access_status: 'active', subscription_status: null, created_at: now() },
-    settings: { user_id: 1, contribution_rate: 0.212, contribution_note: null, monthly_goal: 0, average_price: 0, theme: 'laque', accent_color: null, currency: 'EUR' },
+    settings: { user_id: 1, contribution_rate: 0.212, contribution_note: null, monthly_goal: 0, average_price: 0, theme: firstTheme(), accent_color: null, currency: 'EUR' },
     transactions: [],
     subscriptions: [],
   });
