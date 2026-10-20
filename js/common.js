@@ -25,7 +25,7 @@ window.BBM = (() => {
 
   function applyTheme(settings) {
     const root = document.documentElement;
-    root.dataset.theme = (settings && settings.theme) || 'laque';
+    root.dataset.theme = (settings && settings.theme) || 'rose';
     if (settings && settings.accent_color) {
       root.style.setProperty('--laque', settings.accent_color);
       root.style.setProperty('--laque-2', lighten(settings.accent_color, 0.35));

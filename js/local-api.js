@@ -7,7 +7,7 @@
   const now = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
 
   /* Le vernis choisi sur la page d'accueil est repris à la première ouverture. */
-  const firstTheme = () => { try { const t = JSON.parse(localStorage.getItem('bbm_theme') || 'null'); return t && ['laque', 'rose', 'champagne', 'nude', 'prune'].includes(t.theme) ? t.theme : 'laque'; } catch { return 'laque'; } };
+  const firstTheme = () => { try { const t = JSON.parse(localStorage.getItem('bbm_theme') || 'null'); return t && ['laque', 'rose', 'champagne', 'nude', 'prune'].includes(t.theme) ? t.theme : 'rose'; } catch { return 'rose'; } };
   const fresh = () => ({
     seq: 1,
     user: { id: 1, email: 'moi@local', name: '', business_name: '', access_status: 'active', subscription_status: null, created_at: now() },
@@ -68,7 +68,7 @@
       const contributions = C.estimatedContributions(revenue, s.contribution_rate);
       const subs = sortSubs(data.subscriptions.filter((x) => x.status === 'active'));
       const hist = {};
-      const start = new Date(); start.setDate(1); start.setMonth(start.getMonth() - 5);
+      const start = new Date(); start.setDate(1); start.setMonth(start.getMonth() - 11);
       const startIso = start.toISOString().slice(0, 7);
       for (const x of data.transactions) { const m = x.date.slice(0, 7); if (m < startIso) continue; hist[m] = hist[m] || { month: m, revenue: 0, expenses: 0 }; hist[m][x.type === 'income' ? 'revenue' : 'expenses'] += x.amount; }
       return {
@@ -113,7 +113,7 @@
 
     'PUT /settings/goals': (q, b) => { data.settings.monthly_goal = money(b.monthly_goal, 'objectif mensuel'); data.settings.average_price = money(b.average_price, 'prix moyen'); save(); return data.settings; },
     'PUT /settings/contributions': (q, b) => { const r = Number(b.contribution_rate); if (!Number.isFinite(r) || r < 0 || r > 1) throw err('Le taux doit être entre 0 et 100 %', 400); data.settings.contribution_rate = r; data.settings.contribution_note = str(b.contribution_note, 'note', 500, false) || null; save(); return data.settings; },
-    'PUT /settings/theme': (q, b) => { data.settings.theme = oneOf(b.theme, 'thème', ['laque', 'rose', 'champagne', 'nude', 'prune'], 'laque'); const c = String(b.accent_color || '').trim(); if (c && !/^#[0-9a-fA-F]{6}$/.test(c)) throw err('Couleur invalide', 400); data.settings.accent_color = c ? c.toLowerCase() : null; save(); return data.settings; },
+    'PUT /settings/theme': (q, b) => { data.settings.theme = oneOf(b.theme, 'thème', ['laque', 'rose', 'champagne', 'nude', 'prune'], 'rose'); const c = String(b.accent_color || '').trim(); if (c && !/^#[0-9a-fA-F]{6}$/.test(c)) throw err('Couleur invalide', 400); data.settings.accent_color = c ? c.toLowerCase() : null; save(); return data.settings; },
     'PUT /settings/profile': (q, b) => { data.user.name = str(b.name, 'nom', 100, false) || null; data.user.business_name = str(b.business_name, 'nom', 100, false) || null; save(); return { ok: true }; },
     'GET /settings/export.csv': () => exportCsv(),
     'GET /settings/export.json': () => ({ exported_at: new Date().toISOString(), user: data.user, settings: data.settings, transactions: data.transactions, subscriptions: data.subscriptions }),

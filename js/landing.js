@@ -34,8 +34,8 @@
   const root = document.documentElement;
   /* Une teinte personnalisée (réglée dans l'application) est respectée : aucun flacon n'est alors marqué. */
   const custom = () => Boolean(root.style.getPropertyValue('--laque'));
-  const mark = () => bottles.forEach((b) => b.classList.toggle('active', !custom() && b.dataset.theme === (THEMES.includes(root.dataset.theme) ? root.dataset.theme : 'laque')));
-  if (!THEMES.includes(root.dataset.theme)) root.dataset.theme = 'laque';
+  const mark = () => bottles.forEach((b) => b.classList.toggle('active', !custom() && b.dataset.theme === (THEMES.includes(root.dataset.theme) ? root.dataset.theme : 'rose')));
+  if (!THEMES.includes(root.dataset.theme)) root.dataset.theme = 'rose';
   mark();
   bottles.forEach((b) => b.addEventListener('click', () => {
     const theme = b.dataset.theme;
