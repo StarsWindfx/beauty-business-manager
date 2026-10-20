@@ -425,6 +425,11 @@
         <div class="row"><div class="field"><label>Prénom</label><input name="name" maxlength="100" value="${esc(u.name || '')}" placeholder="Anaïs"></div><div class="field"><label>Nom de l'activité</label><input name="business_name" maxlength="100" value="${esc(u.business_name || '')}"></div></div>
         <div class="error" data-error></div><button class="btn btn-ghost btn-sm" type="submit">Enregistrer</button>
       </form>
+      <div class="card poudre">
+        <div class="card-head"><h3>Affichage</h3></div>
+        <div class="segmented" id="mode-pick"><button type="button" data-mode-pick="nuit" class="${BBM.getMode() === 'nuit' ? 'active' : ''}">Nuit</button><button type="button" data-mode-pick="jour" class="${BBM.getMode() === 'jour' ? 'active' : ''}">Jour</button><button type="button" data-mode-pick="auto" class="${BBM.getMode() === 'auto' ? 'active' : ''}">Automatique</button></div>
+        <p class="help" style="margin-top:8px">Automatique suit le réglage de ton téléphone.</p>
+      </div>
       <form class="card" id="theme-form">
         <div class="card-head"><h3>Ton vernis</h3></div>
         <input type="hidden" name="theme" value="${s.theme}">

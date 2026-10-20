@@ -1,5 +1,5 @@
 /* Hors-ligne : la coque de l'application est mise en cache ; les données restent dans le navigateur. */
-const VERSION = 'bbm-2026-10-20b';
+const VERSION = 'bbm-2026-10-20c';
 const SHELL = [
   './app.html', './index.html', './support.html', './manifest.webmanifest',
   './css/style.css', './css/landing.css',

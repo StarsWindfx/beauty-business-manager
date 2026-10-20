@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mon espace — The Beauty Business Manager</title>
 <meta name="theme-color" content="#1a0a0f">
+<script>try{var m=localStorage.getItem('bbm_mode');document.documentElement.dataset.mode=(m==='jour'||(m==='auto'&&matchMedia('(prefers-color-scheme: light)').matches))?'jour':'nuit'}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -59,6 +60,7 @@
     <header class="top">
       <a class="top-brand" href="./app.html">The Beauty Business Manager</a>
       <h1 class="top-title" id="page-title">Tableau de bord</h1>
+      <button class="mode-toggle" data-mode-toggle type="button" aria-label="Passer en mode jour"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></button>
       <a class="avatar" id="avatar" href="./app.html#parametres" title="Réglages" aria-label="Réglages"></a>
     </header>
     <main class="app-main" id="view"><div class="empty">Chargement…</div></main>
