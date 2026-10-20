@@ -12,30 +12,11 @@ main { overflow-x: clip; }
   .app-header .btn .short { display: inline; }
 }
 
-/* ---------- Héros : le satin bordeaux en fond, toujours sombre, qui se fond dans la page ---------- */
-.hero-bg {
-  position: relative; isolation: isolate; margin-top: calc(-60px - env(safe-area-inset-top)); padding-top: calc(60px + env(safe-area-inset-top));
-  --velours: #1a0a0f; --velours-2: #27111a; --velours-3: #35171f; --encre: #3b1b25; --filet: #47262f;
-  --nacre: #f6ece6; --nacre-2: #e0cfc6; --sourdine: #b09a93; --or: #d8b46f; --or-2: #f0d9a2; --or-deep: #9a7736;
-  --ink: 247, 233, 236; --liseré: rgba(var(--ink), .1);
-  color: var(--nacre);
-}
-.hero-bg::before {
-  content: ''; position: absolute; inset: 0; z-index: -2;
-  background: #1a0a0f url('../img/satin-960.jpg') center 42% / cover no-repeat;
-  background-image: image-set(url('../img/satin-960.webp') type('image/webp'), url('../img/satin-960.jpg') type('image/jpeg'));
-}
-.hero-bg::after {
-  content: ''; position: absolute; inset: 0; z-index: -1;
-  background:
-    radial-gradient(60% 55% at 50% 48%, rgba(26,10,15,.55) 0%, rgba(26,10,15,.25) 55%, transparent 100%),
-    linear-gradient(to bottom, rgba(26,10,15,.45) 0%, rgba(26,10,15,.15) 30%, rgba(26,10,15,.3) 70%, color-mix(in srgb, var(--page) 75%, transparent) 90%, var(--page) 98%);
-}
-@media (min-width: 900px) {
-  .hero-bg::before { background-image: url('../img/satin-1600.jpg'); background-image: image-set(url('../img/satin-1600.webp') type('image/webp'), url('../img/satin-1600.jpg') type('image/jpeg')); }
-}
+/* ---------- Héros : le satin est en fond de page ; ici seulement un voile radial sous le titre ---------- */
+.hero-bg { position: relative; isolation: isolate; margin-top: calc(-60px - env(safe-area-inset-top)); padding-top: calc(60px + env(safe-area-inset-top)); }
+.hero-bg::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(62% 58% at 50% 46%, color-mix(in srgb, var(--page) 55%, transparent) 0%, color-mix(in srgb, var(--page) 25%, transparent) 55%, transparent 100%); }
 .hero { text-align: center; padding-block: 56px 96px; display: grid; justify-items: center; }
-.hero h1, .hero .who, .features li { text-shadow: 0 2px 18px rgba(26,10,15,.7); }
+.hero h1, .hero .who, .features li { text-shadow: 0 2px 18px color-mix(in srgb, var(--page) 70%, transparent); }
 .btn-gold {
   background: linear-gradient(to bottom, #f3dfae, #d8b46f 55%, #c49c53); color: #2a0f16; border-color: #a8843e;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 12px 26px -10px rgba(0,0,0,.8), 0 0 0 1px rgba(26,10,15,.3);

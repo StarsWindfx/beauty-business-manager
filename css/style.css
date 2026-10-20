@@ -58,7 +58,23 @@ body {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .92 0 0 0 0 .95 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
     radial-gradient(1000px 560px at 50% -240px, color-mix(in srgb, var(--laque) 26%, var(--halo)) 0%, transparent 70%);
   min-height: 100dvh;
+  --veil: rgba(26, 10, 15, .55);
 }
+/* Le satin bordeaux en fond de toutes les pages, sous un voile qui laisse lire */
+body::before, body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+body::before {
+  background: #1a0a0f url('../img/satin-960.jpg') center 40% / cover no-repeat;
+  background-image: image-set(url('../img/satin-960.webp') type('image/webp'), url('../img/satin-960.jpg') type('image/jpeg'));
+}
+body::after { background: var(--veil); }
+@media (min-width: 900px) {
+  body::before { background-image: url('../img/satin-1600.jpg'); background-image: image-set(url('../img/satin-1600.webp') type('image/webp'), url('../img/satin-1600.jpg') type('image/jpeg')); }
+}
+body.is-app { --veil: rgba(26, 10, 15, .8); }
+body.is-page { --veil: rgba(26, 10, 15, .74); }
+html[data-mode="jour"] body { --veil: rgba(244, 235, 227, .84); }
+html[data-mode="jour"] body.is-app { --veil: rgba(244, 235, 227, .92); }
+html[data-mode="jour"] body.is-page { --veil: rgba(244, 235, 227, .9); }
 
 /* ---------- Mode jour : blanc cassé, beige, texte bordeaux. L'écrin du mois reste sombre. ---------- */
 html[data-mode="jour"] {
@@ -416,7 +432,7 @@ details p { margin: 8px 0 0; color: var(--nacre-2); max-width: 60ch; }
 }
 @media (min-width: 760px) {
   .shell { grid-template-columns: var(--rail) minmax(0, 1fr); }
-  .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100dvh; padding: calc(18px + env(safe-area-inset-top)) 10px calc(16px + env(safe-area-inset-bottom)); gap: 10px; background: color-mix(in srgb, var(--velours-2) 70%, var(--velours)); border-right: 1px solid var(--liseré); }
+  .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100dvh; padding: calc(18px + env(safe-area-inset-top)) 10px calc(16px + env(safe-area-inset-bottom)); gap: 10px; background: color-mix(in srgb, var(--velours-2) 62%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-right: 1px solid var(--liseré); }
   .logo { display: flex; flex-direction: column; gap: 1px; text-decoration: none; color: var(--nacre); font-family: var(--display); font-weight: 700; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; text-align: center; padding: 6px 0 14px; position: relative; }
   .logo::after { content: ''; display: block; width: 28px; height: 1px; margin: 10px auto 0; background: linear-gradient(90deg, transparent, var(--or), transparent); }
   .side-nav { display: flex; flex-direction: column; gap: 4px; }
