@@ -12,8 +12,36 @@ main { overflow-x: clip; }
   .app-header .btn .short { display: inline; }
 }
 
-/* ---------- Héros ---------- */
-.hero { text-align: center; padding-block: 56px 24px; display: grid; justify-items: center; }
+/* ---------- Héros : le satin bordeaux en fond, toujours sombre, qui se fond dans la page ---------- */
+.hero-bg {
+  position: relative; isolation: isolate; margin-top: calc(-60px - env(safe-area-inset-top)); padding-top: calc(60px + env(safe-area-inset-top));
+  --velours: #1a0a0f; --velours-2: #27111a; --velours-3: #35171f; --encre: #3b1b25; --filet: #47262f;
+  --nacre: #f6ece6; --nacre-2: #e0cfc6; --sourdine: #b09a93; --or: #d8b46f; --or-2: #f0d9a2; --or-deep: #9a7736;
+  --ink: 247, 233, 236; --liseré: rgba(var(--ink), .1);
+  color: var(--nacre);
+}
+.hero-bg::before {
+  content: ''; position: absolute; inset: 0; z-index: -2;
+  background: #1a0a0f url('../img/satin-960.jpg') center 42% / cover no-repeat;
+  background-image: image-set(url('../img/satin-960.webp') type('image/webp'), url('../img/satin-960.jpg') type('image/jpeg'));
+}
+.hero-bg::after {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(60% 55% at 50% 48%, rgba(26,10,15,.55) 0%, rgba(26,10,15,.25) 55%, transparent 100%),
+    linear-gradient(to bottom, rgba(26,10,15,.45) 0%, rgba(26,10,15,.15) 30%, rgba(26,10,15,.3) 70%, color-mix(in srgb, var(--page) 75%, transparent) 90%, var(--page) 98%);
+}
+@media (min-width: 900px) {
+  .hero-bg::before { background-image: url('../img/satin-1600.jpg'); background-image: image-set(url('../img/satin-1600.webp') type('image/webp'), url('../img/satin-1600.jpg') type('image/jpeg')); }
+}
+.hero { text-align: center; padding-block: 56px 96px; display: grid; justify-items: center; }
+.hero h1, .hero .who, .features li { text-shadow: 0 2px 18px rgba(26,10,15,.7); }
+.btn-gold {
+  background: linear-gradient(to bottom, #f3dfae, #d8b46f 55%, #c49c53); color: #2a0f16; border-color: #a8843e;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 12px 26px -10px rgba(0,0,0,.8), 0 0 0 1px rgba(26,10,15,.3);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 16px 30px -10px rgba(0,0,0,.8), 0 0 0 1px rgba(26,10,15,.3); }
+.btn-gold:active { transform: none; box-shadow: inset 0 2px 4px rgba(0,0,0,.25); }
 .hero h1 {
   font-size: clamp(2.5rem, 8.5vw, 4.9rem); font-weight: 500; line-height: 1.02; letter-spacing: -.01em; max-width: 24ch; margin: 0; text-wrap: balance;
 }
@@ -163,11 +191,11 @@ main { overflow-x: clip; }
   .bottle, .bottle svg, .bottle i { transition: none; }
 }
 html[data-mode="jour"] .phone { box-shadow: inset 0 0 0 1px rgba(247,234,239,.28), inset 0 0 0 3px #0a0508, 0 2px 0 rgba(255,255,255,.06), 0 30px 60px -24px rgba(58,22,32,.5), 0 60px 120px -50px color-mix(in srgb, var(--laque) 45%, transparent); }
-html[data-mode="jour"] .features i { background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--or) 22%, #fff), #fff 70%); box-shadow: 0 10px 20px -16px rgba(58,22,32,.5); }
+
 html[data-mode="jour"] .bottle i { background: var(--nacre); }
 @media (min-width: 720px) {
   .features { grid-template-columns: repeat(4, 1fr); gap: 20px; }
-  .hero { padding-block: 84px 30px; }
+  .hero { padding-block: 96px 128px; }
 }
 @media (min-width: 900px) {
   .nuancier.container { width: min(100%, 1200px); }
