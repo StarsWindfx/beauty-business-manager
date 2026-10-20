@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Beauty Business Manager — ce qu'il vous reste vraiment à la fin du mois</title>
+<meta name="description" content="Pour les prothésistes ongulaires, techniciennes de cils et esthéticiennes indépendantes : encaissements, dépenses, cotisations estimées, objectif et abonnements, sur votre téléphone.">
+<meta name="theme-color" content="#160d14">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..600,0..100;1,9..144,300..600,0..100&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<header class="app-header"><div class="container">
+  <a class="brand" href="./index.html">The Beauty Business Manager</a>
+  <a class="btn btn-ghost btn-sm" href="./app.html">Ouvrir l'application</a>
+</div></header>
+
+<main>
+  <section class="hero container">
+    <h1>Ce qu'il vous <em>reste</em> vraiment à la fin du mois.</h1>
+    <a class="btn btn-primary" href="./app.html">Ouvrir l'application</a>
+    <p class="lede">Pour les prothésistes ongulaires, techniciennes de cils et esthéticiennes à leur compte. Vous notez ce qui rentre et ce qui sort ; l'application vous dit où en est votre mois.</p>
+
+    <div class="demo" aria-label="Exemple de tableau de bord">
+      <div class="hero-figure">
+        <p class="lede">Reste estimé, octobre</p>
+        <div class="value num" id="demo-value">0 €</div>
+        <div class="lacquer" id="demo-bar"><span class="seg-dep" style="width:0"></span><span class="seg-cot" style="width:0"></span><span class="seg-reste" style="width:0"></span></div>
+        <div class="legend">
+          <span style="--c:var(--laque)">Dépenses <b>409,60 €</b></span>
+          <span style="--c:color-mix(in srgb, var(--laque) 45%, var(--encre))">Cotisations <b>455,80 €</b></span>
+          <span style="--c:var(--or)">Reste <b>1 284,60 €</b></span>
+        </div>
+      </div>
+      <p class="small muted" style="margin:14px 0 0">Sur 2 150 € encaissés. Objectif 3 000 € : encore 19 poses.</p>
+    </div>
+  </section>
+
+  <section class="section container">
+    <h2>Le compte en banque n'est pas un tableau de bord.</h2>
+    <div class="prose">
+      <p>Entre les poses, la commande de gel, l'abonnement de prise de rendez-vous et l'Urssaf qui tombe tous les trois mois, le solde du compte ne dit pas ce qui est à vous. Le fichier Excel du début finit abandonné en mars.</p>
+      <p>Ici, deux gestes suffisent : noter un encaissement, noter une dépense. Le reste se calcule, avec la formule affichée, et le taux de cotisations que vous choisissez.</p>
+    </div>
+  </section>
+
+  <section class="section container">
+    <h2>Ce que fait l'application</h2>
+    <ul class="capabilities">
+      <li><strong>Le mois en un regard</strong><span>Encaissé, dépensé, cotisations estimées et reste estimé, sur le mois en cours, le précédent ou la période de votre choix.</span></li>
+      <li><strong>Le journal</strong><span>Une recette ou une dépense en dix secondes, depuis le téléphone, entre deux clientes. Catégories, recherche, modification, suppression.</span></li>
+      <li><strong>L'objectif</strong><span>Un objectif de chiffre d'affaires et votre prix moyen : l'application compte les prestations qu'il reste à faire.</span></li>
+      <li><strong>Les abonnements</strong><span>Planity, Canva, assurance, banque : leur coût réel par mois et par an, et les prélèvements qui tombent dans la semaine. Rien n'est compté deux fois : un prélèvement ne devient une dépense que lorsque vous le confirmez.</span></li>
+      <li><strong>Votre vernis</strong><span>Rouge laque, rose poudré, champagne, nude, prune, ou votre propre teinte.</span></li>
+      <li><strong>Vos données</strong><span>Export à tout moment, suppression du compte en un geste. Aucun numéro de carte n'est conservé.</span></li>
+    </ul>
+  </section>
+
+  <section class="section container">
+    <div class="offer">
+      <div>
+        <div class="amount">10<sup>€</sup></div>
+        <p class="muted">Paiement unique pour ouvrir l'accès. Une formule d'abonnement pourra être proposée plus tard, jamais sans votre accord.</p>
+      </div>
+      <div>
+        <a class="btn btn-primary btn-block" href="./app.html">Ouvrir l'application</a>
+        <p class="small muted" style="margin-top:12px">Paiement par Stripe. <a href="./legal/cgv.html">Conditions de vente</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section container">
+    <h2>Questions</h2>
+    <details><summary>Est-ce un logiciel de comptabilité ?</summary><p>Non. C'est un outil de suivi et d'estimation. Il ne remplace ni un expert-comptable ni vos déclarations à l'Urssaf et aux impôts. Les cotisations affichées sont une estimation calculée avec le taux que vous renseignez.</p></details>
+    <details><summary>Comment les cotisations sont-elles estimées ?</summary><p>Chiffre d'affaires multiplié par votre taux. Par défaut 21,2 %, à adapter à votre situation (ACRE, versement libératoire, activité) et aux règles en vigueur.</p></details>
+    <details><summary>Sur quel appareil ?</summary><p>Téléphone, tablette ou ordinateur, dans le navigateur. Vous pouvez l'ajouter à votre écran d'accueil.</p></details>
+    <details><summary>Et si j'arrête ?</summary><p>Vous exportez vos données en CSV ou JSON, puis vous supprimez votre compte depuis les réglages. Tout est effacé.</p></details>
+  </section>
+</main>
+
+<footer class="footer"><div class="container">
+  <a href="./legal/mentions-legales.html">Mentions légales</a><a href="./legal/cgu.html">Conditions d'utilisation</a><a href="./legal/cgv.html">Conditions de vente</a><a href="./legal/confidentialite.html">Confidentialité</a><a href="./support.html">Support</a>
+  <p style="margin-top:12px">Outil de suivi et d'estimation. Ne constitue pas un logiciel de comptabilité certifié ni un outil de déclaration.</p>
+</div></footer>
+<script src="./js/common.js"></script>
+<script src="./js/landing.js"></script>
+</body>
+</html>

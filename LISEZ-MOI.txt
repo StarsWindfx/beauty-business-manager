@@ -1,0 +1,11 @@
+THE BEAUTY BUSINESS MANAGER — version sans serveur
+
+Ouvrez app.html dans votre navigateur (double-clic). C'est tout.
+index.html est la page de présentation.
+
+Vos données sont enregistrées dans le navigateur de cet appareil (localStorage) :
+elles ne sont envoyées nulle part. Réglages > Vos données permet de les exporter
+en JSON (sauvegarde, transfert vers un autre appareil) et de les réimporter.
+
+Les polices sont chargées depuis Google Fonts ; sans connexion, une police de
+remplacement est utilisée.
