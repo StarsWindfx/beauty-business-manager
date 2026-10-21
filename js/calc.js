@@ -107,11 +107,13 @@ function daysUntil(dateStr, today) {
   return Math.round((b - a) / 86400000);
 }
 
-/** Bornes d'une période : 'current' | 'previous' | 'custom' (from/to). */
+/** Bornes d'une période : 'current' | 'previous' | 'year' | 'previous_year' | 'custom' (from/to). */
 function periodBounds(kind, today, from, to) {
   const [y, m] = today.split('-').map(Number);
   const pad = (n) => String(n).padStart(2, '0');
   const endOfMonth = (yy, mm) => new Date(Date.UTC(yy, mm, 0)).getUTCDate();
+  if (kind === 'year') return { from: `${y}-01-01`, to: `${y}-12-31` };
+  if (kind === 'previous_year') return { from: `${y - 1}-01-01`, to: `${y - 1}-12-31` };
   if (kind === 'previous') {
     const py = m === 1 ? y - 1 : y;
     const pm = m === 1 ? 12 : m - 1;
@@ -123,8 +125,26 @@ function periodBounds(kind, today, from, to) {
   return { from: `${y}-${pad(m)}-01`, to: `${y}-${pad(m)}-${pad(endOfMonth(y, m))}` };
 }
 
+/** Bornes de la semaine en cours (lundi → dimanche) contenant `today`. */
+function weekBounds(today) {
+  const d = new Date(today + 'T00:00:00Z');
+  const dow = (d.getUTCDay() + 6) % 7; // lundi = 0
+  const mon = new Date(d); mon.setUTCDate(d.getUTCDate() - dow);
+  const sun = new Date(mon); sun.setUTCDate(mon.getUTCDate() + 6);
+  return { from: mon.toISOString().slice(0, 10), to: sun.toISOString().slice(0, 10) };
+}
+
+/** Variation en % entre deux valeurs ; null si la référence est nulle. */
+function pctChange(current, previous) {
+  const p = Number(previous), c = Number(current);
+  if (!Number.isFinite(p) || p <= 0 || !Number.isFinite(c)) return null;
+  return Math.round(((c - p) / p) * 100);
+}
+
 window.CALC = {
   round2,
+  weekBounds,
+  pctChange,
   totals,
   estimatedContributions,
   estimatedRemaining,

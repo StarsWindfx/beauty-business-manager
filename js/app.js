@@ -1,6 +1,7 @@
-/* Application principale : routeur minimal + 5 vues. */
+/* Application principale : routeur minimal + vues. */
 (() => {
   const { api, fmtMoney, fmtDate, fmtMonth, today, esc, applyTheme, toast, qs } = BBM;
+  const C = window.CALC;
   const view = qs('#view');
   const state = { user: null, settings: null, config: null };
 
@@ -9,21 +10,28 @@
   const FREQ = { monthly: 'Chaque mois', quarterly: 'Chaque trimestre', yearly: 'Chaque année', weekly: 'Chaque semaine', custom: 'Tous les N mois' };
   const STATUS = { active: 'Actif', paused: 'En pause', canceled: 'Résilié' };
   const THEMES = { bordeaux: ['Bordeaux', '#8a1f3a'], rose: ['Rose poudré', '#c4717f'], laque: ['Rouge laque', '#b3123f'], champagne: ['Champagne', '#b38a4e'], nude: ['Nude', '#a27a64'], prune: ['Prune', '#6d3b8f'] };
-  const TITLES = { '/app': 'Tableau de bord', '/app/journal': 'Journal', '/app/abonnements': 'Abonnements', '/app/objectifs': 'Objectif', '/app/parametres': 'Réglages' };
+  const TITLES = { '/app': 'Tableau de bord', '/app/operations': 'Revenus & dépenses', '/app/clients': 'Clients', '/app/objectifs': 'Objectifs', '/app/rapports': 'Rapports', '/app/parametres': 'Réglages', '/app/abonnements': 'Abonnements' };
+  const MONTHS_SHORT = ['jan', 'fév', 'mar', 'avr', 'mai', 'juin', 'juil', 'aoû', 'sep', 'oct', 'nov', 'déc'];
+  const DAYS_SHORT = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
   const options = (map, selected) => Object.entries(map).map(([k, v]) => `<option value="${k}" ${k === selected ? 'selected' : ''}>${esc(v)}</option>`).join('');
   const ico = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const monthName = (d = new Date()) => d.toLocaleDateString('fr-FR', { month: 'long' });
   const deMonth = (d) => { const m = monthName(d); return (/^[aeiouy]/i.test(m) ? "d'" : 'de ') + m; };
   const pad = (n) => String(n).padStart(2, '0');
+  const ymOf = (iso) => iso.slice(0, 7);
+  const monthLabel = (ym) => { const [y, m] = ym.split('-'); return cap(new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' })); };
+  const monthBounds = (ym) => { const [y, m] = ym.split('-').map(Number); return { from: `${y}-${pad(m)}-01`, to: `${y}-${pad(m)}-${pad(new Date(Date.UTC(y, m, 0)).getUTCDate())}` }; };
+  const shiftMonth = (ym, n) => { const [y, m] = ym.split('-').map(Number); const d = new Date(Date.UTC(y, m - 1 + n, 1)); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}`; };
   const lastMonths = (n) => { const now = new Date(); const out = []; for (let i = n - 1; i >= 0; i--) { const x = new Date(now.getFullYear(), now.getMonth() - i, 1); out.push(`${x.getFullYear()}-${pad(x.getMonth() + 1)}`); } return out; };
   const isWide = () => window.matchMedia('(min-width: 600px)').matches;
   const dayLabel = (iso) => {
     const t = today(); if (iso === t) return "Aujourd'hui";
-    const y = new Date(); y.setDate(y.getDate() - 1); if (iso === y.toISOString().slice(0, 10)) return 'Hier';
+    const y = new Date(); y.setDate(y.getDate() - 1); if (iso === `${y.getFullYear()}-${pad(y.getMonth() + 1)}-${pad(y.getDate())}`) return 'Hier';
     const [yy, mm, dd] = iso.split('-'); const d = new Date(Date.UTC(yy, mm - 1, dd));
-    const s = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' });
-    return s.charAt(0).toUpperCase() + s.slice(1);
+    return cap(d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' }));
   };
+  const pctHtml = (cur, prev, ref) => { const p = C.pctChange(cur, prev); if (p === null) return `<div class="d">vs ${ref}</div>`; return `<div class="d ${p > 0 ? 'up' : p < 0 ? 'down' : ''}"><b>${p > 0 ? '+' : ''}${p} %</b> vs ${ref}</div>`; };
 
   /* ---------- Tiroirs ---------- */
   function modal(html, onSubmit) {
@@ -45,16 +53,18 @@
     if (first && isWide()) first.focus();
     return { form, close };
   }
-  const confirmDialog = (title, text) => new Promise((resolve) => {
+  const confirmDialog = (title, text, label = 'Supprimer') => new Promise((resolve) => {
     modal(`<h3>${esc(title)}</h3><p class="muted">${esc(text)}</p>
-      <div class="actions" style="justify-content:flex-end"><button class="btn btn-ghost" type="button" data-close>Annuler</button><button class="btn btn-danger" type="submit">Supprimer</button></div>`,
+      <div class="actions" style="justify-content:flex-end"><button class="btn btn-ghost" type="button" data-close>Annuler</button><button class="btn btn-danger" type="submit">${esc(label)}</button></div>`,
     async () => resolve(true));
     qs('.modal').addEventListener('click', (e) => { if (e.target.classList.contains('modal') || e.target.closest('[data-close]')) resolve(false); });
   });
   function moreSheet() {
     modal(`<h3>Plus</h3>
       <div class="menu-list">
-        <a href="./app.html#objectifs">${ico('goal')}Objectif</a>
+        <a href="./app.html#objectifs">${ico('goal')}Objectifs</a>
+        <a href="./app.html#rapports">${ico('report')}Rapports</a>
+        <a href="./app.html#abonnements">${ico('subs')}Abonnements</a>
         <a href="./app.html#parametres">${ico('settings')}Réglages</a>
         <button type="button" id="more-export">${ico('export')}Exporter mes données<small>JSON</small></button>
         <a href="./support.html">${ico('help')}Support</a>
@@ -64,33 +74,36 @@
   }
 
   /* ---------- Formulaire opération ---------- */
-  async function txForm(tx = {}, onDone) {
+  async function txForm(tx = {}, onDone, preset = {}) {
     const isEdit = Boolean(tx.id);
-    const type = tx.type || 'income';
+    const type = tx.type || preset.type || 'income';
+    const [all, clients] = await Promise.all([api('/transactions'), api('/clients')]);
     let chips = '';
     if (!isEdit) {
-      const all = (await api('/transactions')).items;
       const seen = new Set(); const recent = [];
-      for (const t of all) { const k = t.type + '|' + t.label.toLowerCase(); if (seen.has(k)) continue; seen.add(k); recent.push(t); if (recent.length >= 8) break; }
+      for (const t of all.items) { const k = t.type + '|' + t.label.toLowerCase(); if (seen.has(k)) continue; seen.add(k); recent.push(t); if (recent.length >= 8) break; }
       if (recent.length) chips = `<p class="chips-k">Saisie rapide</p><div class="chips">${recent.map((t) => `<button type="button" class="chip ${t.type === 'expense' ? 'out' : ''}" data-chip data-type="${t.type}" data-label="${esc(t.label)}" data-amount="${t.amount}" data-category="${t.category}">${esc(t.label)} <b>${fmtMoney(t.amount)}</b></button>`).join('')}</div>`;
     }
+    const types = [...new Set(all.items.map((t) => t.label))].slice(0, 60);
+    const clientId = tx.client_id || preset.client_id || '';
     const { form } = modal(`
       <h3>${isEdit ? 'Modifier l\'opération' : 'Nouvelle opération'}</h3>
       <div class="segmented" style="margin-bottom:14px">
-        <button type="button" data-type="income" class="${type === 'income' ? 'active' : ''}">Encaissement</button>
+        <button type="button" data-type="income" class="${type === 'income' ? 'active' : ''}">Revenu</button>
         <button type="button" data-type="expense" class="${type === 'expense' ? 'active' : ''}">Dépense</button>
       </div>
       ${chips}
       <input type="hidden" name="type" value="${type}">
-      <div class="field amount-field"><label>Montant, €</label><input name="amount" type="number" step="0.01" min="0" inputmode="decimal" required value="${tx.amount ?? ''}" placeholder="45" autofocus></div>
-      <div class="field"><label>Libellé</label><input name="label" required maxlength="120" value="${esc(tx.label || '')}" placeholder="Pose gel complète" enterkeyhint="done"></div>
+      <div class="field amount-field"><label>Montant, €</label><input name="amount" type="number" step="0.01" min="0" inputmode="decimal" required value="${tx.amount ?? preset.amount ?? ''}" placeholder="45" autofocus></div>
+      <div class="field"><label>Type</label><input name="label" list="type-list" required maxlength="120" value="${esc(tx.label || preset.label || '')}" placeholder="Pose gel, remplissage, fournitures…" enterkeyhint="done"><datalist id="type-list">${types.map((t) => `<option value="${esc(t)}">`).join('')}</datalist></div>
       <div class="row">
-        <div class="field"><label>Date</label><input name="date" type="date" required value="${tx.date || today()}"></div>
+        <div class="field"><label>Date</label><input name="date" type="date" required value="${tx.date || preset.date || today()}"></div>
         <div class="field"><label>Catégorie</label><select name="category">${options(TX_CAT, tx.category || (type === 'income' ? 'prestation' : 'fournitures'))}</select></div>
       </div>
+      <div class="field" data-client-field ${type === 'income' ? '' : 'hidden'}><label>Cliente</label><select name="client_id"><option value="">Aucune</option>${clients.items.map((c) => `<option value="${c.id}" ${Number(clientId) === c.id ? 'selected' : ''}>${esc(c.display)}</option>`).join('')}</select></div>
       <div class="field"><label>Note</label><textarea name="note" rows="2" maxlength="1000">${esc(tx.note || '')}</textarea></div>
       <div class="error" data-error></div>
-      <div class="actions" style="justify-content:flex-end"><button class="btn btn-ghost" type="button" data-close>Annuler</button><button class="btn btn-primary" type="submit">${isEdit ? 'Enregistrer' : 'Ajouter'}</button></div>`,
+      <div class="actions" style="justify-content:${isEdit ? 'space-between' : 'flex-end'}">${isEdit ? '<button class="btn btn-danger" type="button" id="tx-del">Supprimer</button>' : ''}<span style="display:flex;gap:6px"><button class="btn btn-ghost" type="button" data-close>Annuler</button><button class="btn btn-primary" type="submit">${isEdit ? 'Enregistrer' : 'Ajouter'}</button></span></div>`,
     async (data) => {
       if (isEdit) await api(`/transactions/${tx.id}`, { method: 'PUT', body: data });
       else await api('/transactions', { method: 'POST', body: data });
@@ -100,6 +113,7 @@
     const setType = (t) => {
       form.querySelectorAll('[data-type]').forEach((x) => x.classList.toggle('active', x.dataset.type === t));
       form.type.value = t;
+      qs('[data-client-field]', form).hidden = t !== 'income';
       if (!isEdit) form.category.value = t === 'income' ? 'prestation' : 'fournitures';
     };
     form.querySelectorAll('[data-type]').forEach((b) => b.addEventListener('click', () => setType(b.dataset.type)));
@@ -107,6 +121,25 @@
       setType(c.dataset.type); form.label.value = c.dataset.label; form.amount.value = c.dataset.amount; form.category.value = c.dataset.category;
       qs('button[type=submit]', form).focus();
     }));
+    const del = qs('#tx-del', form);
+    if (del) del.addEventListener('click', async () => { qs('#modal-root').innerHTML = ''; if (await confirmDialog('Supprimer cette opération ?', `${tx.label}, ${fmtMoney(tx.amount)}. Les totaux seront recalculés.`)) { await api(`/transactions/${tx.id}`, { method: 'DELETE' }); toast('Supprimé'); onDone && onDone(); } });
+  }
+
+  /* ---------- Formulaire cliente ---------- */
+  function clientForm(c = {}, onDone) {
+    const isEdit = Boolean(c.id);
+    modal(`
+      <h3>${isEdit ? 'Modifier la fiche' : 'Nouvelle cliente'}</h3>
+      <div class="row"><div class="field"><label>Prénom</label><input name="first_name" required maxlength="80" value="${esc(c.first_name || '')}" autofocus autocomplete="off"></div><div class="field"><label>Nom</label><input name="last_name" maxlength="80" value="${esc(c.last_name || '')}" autocomplete="off"></div></div>
+      <div class="row"><div class="field"><label>Téléphone</label><input name="phone" type="tel" inputmode="tel" maxlength="40" value="${esc(c.phone || '')}"></div><div class="field"><label>E-mail</label><input name="email" type="email" inputmode="email" maxlength="120" value="${esc(c.email || '')}"></div></div>
+      <div class="field"><label>Note</label><textarea name="note" rows="3" maxlength="2000" placeholder="Préférences, allergies, couleur habituelle…">${esc(c.note || '')}</textarea></div>
+      <div class="error" data-error></div>
+      <div class="actions" style="justify-content:flex-end"><button class="btn btn-ghost" type="button" data-close>Annuler</button><button class="btn btn-primary" type="submit">${isEdit ? 'Enregistrer' : 'Ajouter'}</button></div>`,
+    async (data) => {
+      const r = isEdit ? await api(`/clients/${c.id}`, { method: 'PUT', body: data }) : await api('/clients', { method: 'POST', body: data });
+      toast(isEdit ? 'Fiche enregistrée' : 'Cliente ajoutée');
+      onDone && onDone(r);
+    });
   }
 
   /* ---------- Formulaire abonnement ---------- */
@@ -137,80 +170,68 @@
     form.frequency.addEventListener('change', () => qs('[data-custom]', form).classList.toggle('hidden', form.frequency.value !== 'custom'));
   }
 
-  /* ---------- Éléments de liste ---------- */
-  const txItem = (t, actions = false) => `
-    <div class="item" data-id="${t.id}">
-      <div class="main"><div class="title">${esc(t.label)}</div><div class="sub">${esc(TX_CAT[t.category] || t.category)}${t.note ? '. ' + esc(t.note) : ''}</div></div>
-      <div class="amount ${t.type}">${t.type === 'income' ? '+' : '−'}${fmtMoney(t.amount)}</div>
-      ${actions ? `<div class="actions"><button class="icon-btn" data-del title="Supprimer" aria-label="Supprimer">${ico('del')}</button></div>` : ''}
-    </div>`;
-
   /* ---------- Graphiques ---------- */
   const niceMax = (v) => { const p = Math.pow(10, Math.floor(Math.log10(Math.max(1, v)))); const f = v / p; const n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10; return n * p; };
-  const fmtK = (v) => v >= 1000 ? (v / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' k' : String(v);
-  function barChart(hist, months, W) {
-    const H = 200, padL = 38, padR = 8, padT = 30, padB = 24;
-    const data = months.map((m) => hist.find((h) => h.month === m) || { month: m, revenue: 0, expenses: 0 });
-    const max = niceMax(Math.max(1, ...data.map((d) => Math.max(d.revenue, d.expenses))));
-    const innerW = W - padL - padR, slot = innerW / months.length, bw = Math.max(6, Math.min(18, slot * .3));
+  const fmtK = (v) => v >= 1000 ? (v / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' k' : String(Math.round(v));
+  /* Barres du chiffre d'affaires : la barre en cours est plus claire, on touche une barre pour lire sa valeur */
+  function revChart(items, labels, currentKey, selectedKey, W) {
+    const H = 210, padL = 40, padR = 8, padT = 34, padB = 26;
+    const max = niceMax(Math.max(1, ...items.map((d) => d.revenue)));
+    const innerW = W - padL - padR, slot = innerW / items.length, bw = Math.max(8, Math.min(34, slot * .56));
     const y = (v) => padT + (H - padT - padB) * (1 - v / max);
-    const cur = months[months.length - 1];
-    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Encaissé et dépensé par mois"><defs>
-      <linearGradient id="g-or" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--or-2)"/><stop offset="1" style="stop-color:var(--or)"/></linearGradient>
-      <linearGradient id="g-laque" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--laque)"/><stop offset="1" style="stop-color:var(--laque-deep)"/></linearGradient></defs>`;
+    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Chiffre d'affaires"><defs>
+      <linearGradient id="g-or" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--or)"/><stop offset="1" style="stop-color:var(--or-deep)"/></linearGradient>
+      <linearGradient id="g-or-now" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb, var(--or-2) 70%, white)"/><stop offset="1" style="stop-color:var(--or)"/></linearGradient></defs>`;
     [0, .5, 1].forEach((f) => { s += `<line class="grid-line" x1="${padL}" x2="${W - padR}" y1="${y(max * f)}" y2="${y(max * f)}"/><text x="${padL - 6}" y="${y(max * f) + 4}" text-anchor="end">${fmtK(max * f)}</text>`; });
-    data.forEach((d, i) => {
+    items.forEach((d, i) => {
       const cx = padL + slot * i + slot / 2;
-      const rx = cx - bw - 1.5, ex = cx + 1.5;
-      s += `<rect class="bar-r ${d.month === cur ? 'now' : ''}" x="${rx}" y="${y(d.revenue)}" width="${bw}" height="${Math.max(0, y(0) - y(d.revenue))}" rx="3"/>`;
-      s += `<rect class="bar-e" x="${ex}" y="${y(d.expenses)}" width="${bw}" height="${Math.max(0, y(0) - y(d.expenses))}" rx="3"/>`;
-      s += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${fmtMonth(d.month)}</text>`;
-      if (d.month === cur && d.revenue > 0) {
-        const label = fmtMoney(d.revenue); const tw = label.length * 6.6 + 14; const tx = Math.min(W - padR - tw, Math.max(padL, cx - tw / 2)); const ty = Math.max(2, y(d.revenue) - 24);
-        s += `<rect class="tip-bg" x="${tx}" y="${ty}" width="${tw}" height="18" rx="9"/><text class="tip-t" x="${tx + tw / 2}" y="${ty + 12.5}" text-anchor="middle">${label}</text>`;
+      const h = Math.max(0, y(0) - y(d.revenue));
+      s += `<rect class="bar-r ${d.key === currentKey ? 'now' : ''} ${d.key === selectedKey ? 'sel' : ''}" data-key="${d.key}" x="${cx - bw / 2}" y="${y(d.revenue)}" width="${bw}" height="${h}" rx="4"/>`;
+      s += `<rect class="hit" data-key="${d.key}" x="${padL + slot * i}" y="${padT}" width="${slot}" height="${H - padT - padB}" fill="transparent"/>`;
+      s += `<text x="${cx}" y="${H - 7}" text-anchor="middle" class="${d.key === currentKey ? 'now' : ''}">${labels[i]}</text>`;
+      if (d.key === selectedKey) {
+        const label = fmtMoney(d.revenue) + (d.count ? ` · ${d.count} presta.` : ''); const tw = label.length * 6.4 + 16; const tx = Math.min(W - padR - tw, Math.max(padL, cx - tw / 2)); const ty = Math.max(2, y(d.revenue) - 26);
+        s += `<rect class="tip-bg" x="${tx}" y="${ty}" width="${tw}" height="20" rx="10"/><text class="tip-t" x="${tx + tw / 2}" y="${ty + 13.5}" text-anchor="middle">${label}</text>`;
       }
     });
     return s + '</svg>';
   }
-  const DONUT_COLORS = ['var(--laque)', 'var(--laque-2)', 'color-mix(in srgb, var(--laque) 50%, var(--or))', 'var(--or)', 'var(--sourdine)'];
-  function donut(groups, total) {
+  const PIE_COLORS = ['var(--laque)', 'var(--or)', 'var(--laque-2)', 'color-mix(in srgb, var(--laque) 50%, var(--or))', 'var(--sourdine)'];
+  function pie(groups, total, centerText, centerSub) {
     const r = 52, c = 2 * Math.PI * r; let off = 0;
-    const arcs = groups.map((g, i) => { const len = c * g.amount / total; const el = `<circle class="arc" cx="70" cy="70" r="${r}" style="stroke:${DONUT_COLORS[i]}" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`; off += len; return el; }).join('');
-    return `<svg class="donut" viewBox="0 0 140 140" role="img" aria-label="Répartition des dépenses"><circle class="track" cx="70" cy="70" r="${r}"/>${arcs}<text class="center" x="70" y="68">${fmtMoney(total)}</text><text class="center-k" x="70" y="84">dépensés</text></svg>`;
+    const arcs = groups.map((g, i) => { const len = c * g.amount / total; const el = `<circle class="arc" cx="70" cy="70" r="${r}" style="stroke:${PIE_COLORS[i]}" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`; off += len; return el; }).join('');
+    return `<svg class="donut" viewBox="0 0 140 140" role="img" aria-label="Répartition des revenus"><circle class="track" cx="70" cy="70" r="${r}"/>${arcs}<text class="center" x="70" y="67">${centerText}</text><text class="center-k" x="70" y="83">${centerSub}</text></svg>`;
   }
-  const pctDelta = (cur, prev) => prev > 0 ? Math.round(((cur - prev) / prev) * 100) : null;
-  const deltaHtml = (cur, prev, ref) => { const p = pctDelta(cur, prev); if (p === null) return `<div class="d">vs ${ref}</div>`; return `<div class="d ${p > 0 ? 'up' : p < 0 ? 'down' : ''}"><b>${p > 0 ? '+' : ''}${p} %</b> vs ${ref}</div>`; };
 
   /* ---------- Vue : tableau de bord ---------- */
-  const dashState = { period: 'current', from: '', to: '' };
-  let dashCharts = null;
+  const dashState = { period: 'current', from: '', to: '', scope: 'year', selected: null };
+  let redraw = null;
   async function renderDashboard() {
     const q = new URLSearchParams({ period: dashState.period, from: dashState.from, to: dashState.to });
     const d = await api('/dashboard?' + q);
     const k = d.kpis;
-    const prev = dashState.period === 'current' ? await api('/dashboard?period=previous') : null;
-    const [inc, exp, prevInc] = await Promise.all([
-      api(`/transactions?type=income&from=${d.period.from}&to=${d.period.to}`),
-      api(`/transactions?type=expense&from=${d.period.from}&to=${d.period.to}`),
-      prev ? api(`/transactions?type=income&from=${prev.period.from}&to=${prev.period.to}`) : null,
-    ]);
+    const prevKind = dashState.period === 'current' ? 'previous' : dashState.period === 'year' ? 'previous_year' : null;
+    const prev = prevKind ? await api('/dashboard?period=' + prevKind) : null;
+    const prevRef = dashState.period === 'year' ? String(new Date().getFullYear() - 1) : fmtMonth(lastMonths(2)[0]);
+    const series = await api('/stats/revenue?scope=' + dashState.scope);
+    if (!dashState.selected || !series.items.some((x) => x.key === dashState.selected)) dashState.selected = series.current;
     const rate = (k.contribution_rate * 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
     const pct = Math.min(100, d.goal.progress_pct);
     const base = k.revenue > 0 ? k.revenue : 1;
     const seg = (v) => k.revenue > 0 ? Math.max(0, Math.min(100, (v / base) * 100)) : 0;
-    const prevRef = fmtMonth(lastMonths(2)[0]);
-    const periodLabel = dashState.period === 'current' ? `Voici ton mois ${deMonth()}.` : dashState.period === 'previous' ? `Ton mois ${deMonth(new Date(new Date().setMonth(new Date().getMonth() - 1)))}.` : `Du ${fmtDate(d.period.from)} au ${fmtDate(d.period.to)}.`;
-    const byCat = {}; for (const t of exp.items) byCat[t.category] = (byCat[t.category] || 0) + t.amount;
-    let groups = Object.entries(byCat).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount);
-    if (groups.length > 5) { const rest = groups.slice(4).reduce((s, g) => s + g.amount, 0); groups = [...groups.slice(0, 4), { category: 'autres', amount: rest, label: 'Autres' }]; }
-    const expTotal = groups.reduce((s, g) => s + g.amount, 0);
+    const periodLabel = dashState.period === 'current' ? `Résumé de l'activité du mois ${deMonth()}` : dashState.period === 'year' ? `Résumé de l'activité de l'année ${new Date().getFullYear()}` : `Résumé de l'activité du ${fmtDate(d.period.from)} au ${fmtDate(d.period.to)}`;
+    const periodWord = dashState.period === 'current' ? 'ce mois-ci' : dashState.period === 'year' ? 'cette année' : 'sur la période';
+    let groups = d.revenue_by_type.slice(0, 4);
+    const rest = d.revenue_by_type.slice(4).reduce((s, g) => s + g.amount, 0);
+    if (rest > 0) groups = [...groups, { label: 'Autres', amount: rest, other: true }];
+    const revTotal = groups.reduce((s, g) => s + g.amount, 0);
     const name = state.user.name ? `, ${esc(state.user.name)}` : '';
     view.innerHTML = `
       <div class="greet greet-row">
         <div><h2>Bonjour${name} !</h2><p>${periodLabel}</p></div>
         <select id="period" class="period-select" aria-label="Période">
-          <option value="current" ${dashState.period === 'current' ? 'selected' : ''}>Ce mois</option>
-          <option value="previous" ${dashState.period === 'previous' ? 'selected' : ''}>Mois dernier</option>
+          <option value="current" ${dashState.period === 'current' ? 'selected' : ''}>Mois en cours</option>
+          <option value="year" ${dashState.period === 'year' ? 'selected' : ''}>Année en cours</option>
           <option value="custom" ${dashState.period === 'custom' ? 'selected' : ''}>Autre période</option>
         </select>
       </div>
@@ -227,112 +248,170 @@
           <span style="--c:color-mix(in srgb, var(--laque) 45%, var(--encre))">Cotisations ${rate} % <b>${fmtMoney(k.contributions)}</b></span>
           <span style="--c:var(--or)">Reste <b>${fmtMoney(Math.max(0, k.remaining))}</b></span>
         </div>
-        <p class="small muted" style="margin:12px 0 0">Encaissé − dépenses − cotisations estimées. Une estimation, pas un résultat comptable. <a href="./app.html#parametres">Changer le taux</a></p>
+        <p class="small muted" style="margin:12px 0 0">Chiffre d'affaires − dépenses − cotisations estimées. Une estimation, pas un résultat comptable. <a href="./app.html#parametres">Changer le taux</a></p>
       </div></section>
 
       <div class="kpis">
-        <div class="card poudre kpi main"><div class="k">Encaissé ${ico('in')}</div><div class="v">${fmtMoney(k.revenue)}</div>${prev ? deltaHtml(k.revenue, prev.kpis.revenue, prevRef) : ''}</div>
-        <div class="card poudre kpi out"><div class="k">Dépenses ${ico('out')}</div><div class="v">${fmtMoney(k.expenses)}</div>${prev ? deltaHtml(k.expenses, prev.kpis.expenses, prevRef) : ''}</div>
+        <div class="card poudre kpi main"><div class="k">Chiffre d'affaires ${ico('in')}</div><div class="v">${fmtMoney(k.revenue)}</div>${prev ? pctHtml(k.revenue, prev.kpis.revenue, prevRef) : ''}</div>
+        <div class="card poudre kpi out"><div class="k">Dépenses ${ico('out')}</div><div class="v">${fmtMoney(k.expenses)}</div>${prev ? pctHtml(k.expenses, prev.kpis.expenses, prevRef) : ''}</div>
         <div class="card poudre kpi"><div class="k">Cotisations ${ico('rest')}</div><div class="v">${fmtMoney(k.contributions)}</div><div class="d">${rate} % du chiffre d'affaires</div></div>
-        <div class="card poudre kpi"><div class="k">Prestations ${ico('bottle')}</div><div class="v">${inc.total}</div>${prev ? deltaHtml(inc.total, prevInc.total, prevRef) : ''}</div>
+        <div class="card poudre kpi"><div class="k">Prestations ${ico('bottle')}</div><div class="v">${k.services}</div>${prev ? pctHtml(k.services, prev.kpis.services, prevRef) : ''}</div>
       </div>
 
-      <div class="two-col">
-        <div>
-          <section class="card">
-            <div class="card-head"><h3>Encaissé par mois</h3><span class="legend" style="margin:0;font-size:.8rem"><span style="--c:var(--or)">Encaissé</span><span style="--c:var(--laque)">Dépensé</span></span></div>
-            <div id="chart-bars"></div>
+      <div class="dash-grid">
+          <section class="card dash-chart">
+            <div class="card-head"><h3>Évolution du chiffre d'affaires</h3>
+              <select id="scope" class="period-select small-select" aria-label="Période du graphique"><option value="year" ${dashState.scope === 'year' ? 'selected' : ''}>Année</option><option value="week" ${dashState.scope === 'week' ? 'selected' : ''}>Semaine</option></select></div>
+            <div id="chart-rev" class="chart-slot"></div>
+            <p class="help" style="margin:4px 0 0">${dashState.scope === 'year' ? `Année ${series.current.slice(0, 4)}, par mois.` : `Semaine du ${fmtDate(series.from)} au ${fmtDate(series.to)}, par jour.`} Touche une barre pour lire sa valeur.</p>
           </section>
           <section class="card">
-            <div class="card-head"><h3>Où va l'argent</h3><a class="small" href="./app.html#journal">Journal</a></div>
-            ${expTotal > 0 ? `<div class="donut-wrap">${donut(groups, expTotal)}<div class="donut-legend">${groups.map((g, i) => `<div><i style="--c:${DONUT_COLORS[i]}"></i><span>${esc(g.label || TX_CAT[g.category] || g.category)}</span><b>${fmtMoney(g.amount)}<small>${Math.round((g.amount / expTotal) * 100)} %</small></b></div>`).join('')}</div></div>` : '<div class="empty"><strong>Aucune dépense sur la période.</strong>La répartition apparaîtra ici.</div>'}
+            <div class="card-head"><h3>Répartition des revenus</h3><a class="small" href="./app.html#operations">Revenus</a></div>
+            ${revTotal > 0 ? `<div class="donut-wrap">${pie(groups, revTotal, fmtMoney(revTotal), periodWord)}<div class="donut-legend">${groups.map((g, i) => `<div class="${g.other ? 'other' : ''}"><i style="--c:${PIE_COLORS[i]}"></i><span>${esc(g.label)}</span><b>${Math.round((g.amount / revTotal) * 100)} %<small>${fmtMoney(g.amount)}</small></b></div>`).join('')}</div></div>` : '<div class="empty"><strong>Aucun revenu sur la période.</strong>Les quatre principaux types de revenus apparaîtront ici.</div>'}
           </section>
-        </div>
-        <div>
-          <section class="card poudre">
-            <div class="card-head"><h3>Objectif ${deMonth()}</h3><a class="small" href="./app.html#objectifs">Modifier</a></div>
-            ${d.goal.monthly_goal > 0 ? `
-              <div class="progress"><span style="width:${pct}%"></span></div>
-              <div style="display:flex;justify-content:space-between;margin-top:8px" class="small"><span>${fmtMoney(d.goal.achieved)} sur ${fmtMoney(d.goal.monthly_goal)}</span><span class="muted">${Math.round(d.goal.progress_pct)} %</span></div>
-              ${d.goal.remaining_services !== null ? `<p style="margin:10px 0 0;font-family:var(--display);font-size:1.3rem">${d.goal.remaining_services === 0 ? 'Objectif atteint.' : `Encore ${d.goal.remaining_services} prestation${d.goal.remaining_services > 1 ? 's' : ''} à ${fmtMoney(d.goal.average_price)}.`}</p>` : '<p class="small muted" style="margin:8px 0 0">Indique un prix moyen pour compter les prestations restantes.</p>'}`
+          <section class="card poudre goal-card">
+            <div class="card-head"><h3>Objectifs du mois</h3><a class="btn btn-ghost btn-sm" href="./app.html#objectifs">Modifier</a></div>
+            ${d.goal.goal > 0 ? `
+              <p class="goal-line">Atteindre <b>${fmtMoney(d.goal.goal)}</b> de chiffre d'affaires</p>
+              <div class="progress black"><span style="width:${pct}%"></span></div>
+              <div class="goal-row"><span><b>${fmtMoney(d.goal.achieved)}</b> / ${fmtMoney(d.goal.goal)}</span><span class="goal-pct">${Math.round(d.goal.progress_pct)} %</span></div>
+              ${d.goal.remaining_services !== null && d.goal.remaining_services > 0 ? `<p class="small muted" style="margin:10px 0 0">Encore ${d.goal.remaining_services} prestation${d.goal.remaining_services > 1 ? 's' : ''} à ${fmtMoney(d.goal.average_price)}.</p>` : d.goal.remaining_services === 0 ? '<p class="small" style="margin:10px 0 0">Objectif atteint.</p>' : ''}`
             : `<div class="empty"><strong>Pas encore d'objectif.</strong><a href="./app.html#objectifs">Définir un objectif mensuel</a></div>`}
           </section>
-          <section class="card poudre">
-            <div class="card-head"><h3>Prélèvements cette semaine</h3><a class="small" href="./app.html#abonnements">Abonnements</a></div>
-            ${d.subscriptions.upcoming.length ? `<div class="list">${d.subscriptions.upcoming.map((s) => `
-              <div class="item due-soon"><div class="main"><div class="title">${esc(s.name)}</div><div class="sub">${s.days_until < 0 ? `En retard de ${-s.days_until} jour${-s.days_until > 1 ? 's' : ''}` : s.days_until === 0 ? 'Aujourd\'hui' : s.days_until === 1 ? 'Demain' : `Dans ${s.days_until} jours`}, le ${fmtDate(s.next_charge_date)}</div></div><div class="amount expense">${fmtMoney(s.amount)}</div></div>`).join('')}</div>`
-            : `<p class="muted small" style="margin:0">Aucun prélèvement dans les sept jours. Tes abonnements actifs : environ ${fmtMoney(d.subscriptions.monthly_cost)} par mois.</p>`}
-          </section>
-          <section class="card poudre">
-            <div class="card-head"><h3>Dernières opérations</h3><a class="small" href="./app.html#journal">Journal</a></div>
-            ${d.recent.length ? `<div class="list">${d.recent.map((t) => txItem(t)).join('')}</div>` : '<div class="empty"><strong>Rien de noté pour l\'instant.</strong>Ajoute un encaissement ou une dépense avec le bouton +.</div>'}
-          </section>
-        </div>
       </div>`;
-    const drawCharts = () => {
-      const slot = qs('#chart-bars'); if (!slot) return;
+    redraw = () => {
+      const slot = qs('#chart-rev'); if (!slot) return;
       const W = Math.max(260, slot.clientWidth);
-      slot.innerHTML = barChart(d.history, lastMonths(isWide() ? 12 : 6), W);
+      const labels = series.items.map((x, i) => dashState.scope === 'year' ? MONTHS_SHORT[i] : DAYS_SHORT[i]);
+      slot.innerHTML = revChart(series.items, labels, series.current, dashState.selected, W);
     };
-    drawCharts(); dashCharts = drawCharts;
+    redraw();
+    qs('#chart-rev').addEventListener('click', (e) => { const t = e.target.closest('[data-key]'); if (!t) return; dashState.selected = t.dataset.key; redraw(); });
     requestAnimationFrame(() => {
       const segs = view.querySelectorAll('.lacquer > span');
       [k.expenses, k.contributions, Math.max(0, k.remaining)].forEach((v, i) => { segs[i].style.width = seg(v) + '%'; });
     });
     qs('#period').addEventListener('change', (e) => { dashState.period = e.target.value; if (dashState.period !== 'custom') renderDashboard(); else qs('#custom-range').classList.remove('hidden'); });
+    qs('#scope').addEventListener('change', (e) => { dashState.scope = e.target.value; dashState.selected = null; renderDashboard(); });
     ['from', 'to'].forEach((id) => qs('#' + id).addEventListener('change', () => { dashState.from = qs('#from').value; dashState.to = qs('#to').value; if (dashState.from && dashState.to) renderDashboard(); }));
   }
-  let resizeT; window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (dashCharts && qs('#chart-bars')) dashCharts(); }, 150); });
+  let resizeT; window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (redraw && qs('.chart-slot')) redraw(); }, 150); });
 
-  /* ---------- Vue : journal ---------- */
-  const jState = { type: '', category: '', from: '', to: '', q: '', filtersOpen: false };
-  async function renderJournal() {
-    const q = new URLSearchParams(Object.fromEntries(Object.entries(jState).filter(([key, v]) => v && key !== 'filtersOpen')));
-    const d = await api('/transactions?' + q);
-    const inc = d.items.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const exp = d.items.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    const hasFilters = Boolean(jState.type || jState.category || jState.from || jState.to);
-    const open = jState.filtersOpen || hasFilters;
-    const byDay = []; for (const t of d.items) { const last = byDay[byDay.length - 1]; if (last && last.date === t.date) last.items.push(t); else byDay.push({ date: t.date, items: [t] }); }
+  /* ---------- Vue : revenus & dépenses ---------- */
+  const opsState = { tab: 'income', month: ymOf(today()) };
+  const amountCell = (t) => `<td class="amt ${t.type}">${t.type === 'income' ? '+' : '−'}${fmtMoney(t.amount)}</td>`;
+  async function renderOperations() {
+    const b = monthBounds(opsState.month);
+    const [all, clients] = await Promise.all([api(`/transactions?from=${b.from}&to=${b.to}`), api('/clients')]);
+    const names = Object.fromEntries(clients.items.map((c) => [c.id, c.display]));
+    const rows = all.items.filter((t) => t.type === opsState.tab);
+    const total = rows.reduce((s, t) => s + t.amount, 0);
+    const gains = all.items.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const losses = all.items.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const months = [...new Set((await api('/transactions')).items.map((t) => ymOf(t.date)))].filter((m) => m < ymOf(today())).sort().reverse();
+    const trRow = (t, arrows = false) => `<tr data-id="${t.id}"><td class="dt"><span>${fmtDate(t.date)}</span>${t.date > today() ? '<span class="tag">à venir</span>' : ''}</td><td class="ty">${esc(t.label)}${t.client_id && names[t.client_id] ? `<small>${esc(names[t.client_id])}</small>` : ''}</td>${arrows ? `<td class="amt ${t.type}"><svg class="arrow"><use href="#i-${t.type === 'income' ? 'up' : 'down'}"/></svg>${fmtMoney(t.amount)}</td>` : amountCell(t)}</tr>`;
     view.innerHTML = `
-      <div class="row" style="grid-template-columns:1fr auto;margin-bottom:12px;align-items:center">
-        <div class="search">${ico('search')}<input id="f-q" placeholder="Rechercher" value="${esc(jState.q)}" enterkeyhint="search"></div>
-        <button class="btn btn-ghost filters-toggle" id="f-toggle" aria-expanded="${open}">${ico('filter')}Filtres${hasFilters ? ' •' : ''}</button>
-      </div>
-      <div class="card ${open ? '' : 'hidden'}" id="filters" style="margin-bottom:14px">
-        <div class="row">
-          <div><label>Type</label><select id="f-type"><option value="">Tout</option><option value="income" ${jState.type === 'income' ? 'selected' : ''}>Encaissements</option><option value="expense" ${jState.type === 'expense' ? 'selected' : ''}>Dépenses</option></select></div>
-          <div><label>Catégorie</label><select id="f-cat"><option value="">Toutes</option>${options(TX_CAT, jState.category)}</select></div>
-          <div><label>Du</label><input type="date" id="f-from" value="${jState.from}"></div>
-          <div><label>Au</label><input type="date" id="f-to" value="${jState.to}"></div>
+      <section class="card table-card">
+        <div class="ops-head">
+          <div class="segmented ops-tabs"><button type="button" data-tab="income" class="${opsState.tab === 'income' ? 'active' : ''}">Revenus</button><button type="button" data-tab="expense" class="${opsState.tab === 'expense' ? 'active' : ''}">Dépenses</button></div>
+          <button class="btn btn-primary" id="add">${ico('plus')}Ajouter une opération</button>
         </div>
-        ${hasFilters ? '<button class="btn btn-ghost btn-sm" id="f-clear" style="margin-top:12px">Effacer les filtres</button>' : ''}
-      </div>
-      <div class="figures">
-        <div class="card poudre figure in"><div class="k">Encaissé</div><div class="v">${fmtMoney(inc)}</div></div>
-        <div class="card poudre figure out"><div class="k">Dépensé</div><div class="v">${fmtMoney(exp)}</div></div>
-      </div>
+        <div class="month-nav"><button class="icon-btn" id="m-prev" aria-label="Mois précédent"><svg><use href="#i-back"/></svg></button><b>${monthLabel(opsState.month)}</b><button class="icon-btn" id="m-next" aria-label="Mois suivant" ${opsState.month >= ymOf(today()) ? 'disabled' : ''}><svg><use href="#i-chev"/></svg></button></div>
+        <table class="ops">
+          <thead><tr><th>Date</th><th>Type</th><th class="r">Montant</th></tr></thead>
+          <tbody id="ops-body">${rows.length ? rows.map((t) => trRow(t)).join('') : `<tr class="empty-row"><td colspan="3">Aucun${opsState.tab === 'income' ? ' revenu' : 'e dépense'} ce mois-ci.</td></tr>`}</tbody>
+          <tfoot><tr><td colspan="2"><b>Total du mois</b><small>${monthLabel(opsState.month)}</small></td><td class="amt ${opsState.tab}">${fmtMoney(total)}</td></tr></tfoot>
+        </table>
+      </section>
+
+      <section class="card table-card">
+        <div class="card-head"><h3>Mouvements du mois</h3><span class="small muted">${all.items.length} opération${all.items.length > 1 ? 's' : ''}</span></div>
+        <table class="ops">
+          <thead><tr><th>Date</th><th>Type</th><th class="r">Montant</th></tr></thead>
+          <tbody id="mv-body">${all.items.length ? all.items.map((t) => trRow(t, true)).join('') : '<tr class="empty-row"><td colspan="3">Rien ce mois-ci.</td></tr>'}</tbody>
+          <tfoot><tr><td colspan="2"><b>Différence</b><small>Gains ${fmtMoney(gains)} · Pertes ${fmtMoney(losses)}</small></td><td class="amt ${gains - losses >= 0 ? 'income' : 'expense'}">${gains - losses >= 0 ? '+' : '−'}${fmtMoney(Math.abs(gains - losses))}</td></tr></tfoot>
+        </table>
+      </section>
+
       <section class="card poudre">
-        <div class="card-head"><h3>${d.total} opération${d.total > 1 ? 's' : ''}</h3><button class="btn btn-ghost btn-sm" id="add">${ico('plus')}Ajouter</button></div>
-        ${d.items.length ? `<div class="list" id="tx-list">${byDay.map((g) => `<div class="day-head"><span>${dayLabel(g.date)}</span><span>${fmtDate(g.date)}</span></div>${g.items.map((t) => txItem(t, true)).join('')}`).join('')}</div>` : '<div class="empty"><strong>Aucune opération ici.</strong>Change les filtres ou ajoute une opération avec le bouton +.</div>'}
+        <div class="card-head"><h3>Archives</h3><button class="btn btn-ghost btn-sm" id="pdf-now">${ico('pdf')}PDF de ce mois</button></div>
+        ${months.length ? `<div class="list">${months.map((m) => `<div class="item"><div class="main"><div class="title">${monthLabel(m)}</div></div><button class="btn btn-ghost btn-sm" data-pdf="${m}">${ico('pdf')}PDF</button></div>`).join('')}</div>` : '<p class="small muted" style="margin:0">Les mois passés apparaîtront ici, avec leur relevé en PDF.</p>'}
       </section>`;
-    const refresh = () => renderJournal();
-    qs('#add').addEventListener('click', () => txForm({}, refresh));
-    qs('#f-toggle').addEventListener('click', () => { jState.filtersOpen = !open; qs('#filters').classList.toggle('hidden', !jState.filtersOpen && !hasFilters); qs('#f-toggle').setAttribute('aria-expanded', String(jState.filtersOpen || hasFilters)); });
-    const bind = (id, key) => qs(id).addEventListener('change', (e) => { jState[key] = e.target.value; jState.filtersOpen = true; refresh(); });
-    bind('#f-type', 'type'); bind('#f-cat', 'category'); bind('#f-from', 'from'); bind('#f-to', 'to');
-    const clear = qs('#f-clear'); if (clear) clear.addEventListener('click', () => { Object.assign(jState, { type: '', category: '', from: '', to: '', filtersOpen: false }); refresh(); });
-    let t; qs('#f-q').addEventListener('input', (e) => { clearTimeout(t); t = setTimeout(() => { jState.q = e.target.value; refresh(); }, 350); });
-    const list = qs('#tx-list');
-    if (list) list.addEventListener('click', async (e) => {
-      const item = e.target.closest('.item'); if (!item) return;
-      const tx = d.items.find((x) => x.id === Number(item.dataset.id));
-      if (e.target.closest('[data-del]')) {
-        if (await confirmDialog('Supprimer cette opération ?', `${tx.label}, ${fmtMoney(tx.amount)}. Les totaux seront recalculés.`)) { await api(`/transactions/${tx.id}`, { method: 'DELETE' }); toast('Supprimé'); refresh(); }
-        return;
-      }
-      txForm(tx, refresh);
-    });
+    const refresh = () => renderOperations();
+    view.querySelectorAll('[data-tab]').forEach((bt) => bt.addEventListener('click', () => { opsState.tab = bt.dataset.tab; refresh(); }));
+    qs('#add').addEventListener('click', () => txForm({}, refresh, { type: opsState.tab }));
+    qs('#m-prev').addEventListener('click', () => { opsState.month = shiftMonth(opsState.month, -1); refresh(); });
+    qs('#m-next').addEventListener('click', () => { opsState.month = shiftMonth(opsState.month, 1); refresh(); });
+    const edit = (e) => { const tr = e.target.closest('tr[data-id]'); if (!tr) return; const t = all.items.find((x) => x.id === Number(tr.dataset.id)); if (t) txForm(t, refresh); };
+    qs('#ops-body').addEventListener('click', edit); qs('#mv-body').addEventListener('click', edit);
+    const makePdf = async (ym) => {
+      const bb = monthBounds(ym); const r = await api(`/transactions?from=${bb.from}&to=${bb.to}`);
+      const items = [...r.items].sort((a, c) => a.date.localeCompare(c.date) || a.id - c.id);
+      const rev = items.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0), exp = items.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      const blob = BBM.pdf.monthStatement({ title: monthLabel(ym), subtitle: 'Revenus et dépenses du mois', business: state.user.business_name || (state.user.name ? `${state.user.name} — The Beauty Business Manager` : 'The Beauty Business Manager'), rows: items, revenue: rev, expenses: exp });
+      BBM.local.download(`releve-${ym}.pdf`, blob); toast('PDF téléchargé');
+    };
+    qs('#pdf-now').addEventListener('click', () => makePdf(opsState.month));
+    view.querySelectorAll('[data-pdf]').forEach((bt) => bt.addEventListener('click', () => makePdf(bt.dataset.pdf)));
+  }
+
+  /* ---------- Vue : clients ---------- */
+  const cliState = { q: '', limit: 10, mode: 'rdv' };
+  async function renderClients() {
+    const [appts, clients] = await Promise.all([api(`/appointments?q=${encodeURIComponent(cliState.q)}&offset=0&limit=${cliState.limit}`), api(`/clients?q=${encodeURIComponent(cliState.q)}`)]);
+    const groups = []; for (const a of appts.items) { const m = ymOf(a.date); const last = groups[groups.length - 1]; if (last && last.month === m) last.items.push(a); else groups.push({ month: m, items: [a] }); }
+    view.innerHTML = `
+      <section class="card table-card">
+        <div class="ops-head">
+          <div class="search" style="flex:1"><svg><use href="#i-search"/></svg><input id="c-q" placeholder="Rechercher un client" value="${esc(cliState.q)}" enterkeyhint="search"></div>
+          <button class="btn btn-primary" id="c-add">${ico('plus')}Ajouter un client</button>
+        </div>
+        <div class="segmented ops-tabs" style="margin-bottom:6px"><button type="button" data-mode="rdv" class="${cliState.mode === 'rdv' ? 'active' : ''}">Rendez-vous</button><button type="button" data-mode="list" class="${cliState.mode === 'list' ? 'active' : ''}">Toutes les clientes (${clients.total})</button></div>
+        ${cliState.mode === 'rdv' ? (groups.length ? `<div class="list" id="c-list">${groups.map((g) => `<div class="day-head"><span>${monthLabel(g.month)}</span></div>${g.items.map((a) => `
+          <div class="item" data-client="${a.client_id}"><div class="main"><div class="title">${esc(a.client)}${a.upcoming ? ' <span class="tag">à venir</span>' : ''}</div><div class="sub">${fmtDate(a.date)} · ${esc(a.label)}</div></div><div class="amount income">${fmtMoney(a.amount)}</div><svg class="chev"><use href="#i-chev"/></svg></div>`).join('')}`).join('')}</div>
+          ${appts.total > appts.items.length ? `<button class="btn btn-ghost btn-block" id="c-more" style="margin-top:12px">Voir plus (${appts.total - appts.items.length})</button>` : ''}`
+          : `<div class="empty"><strong>${clients.total ? 'Aucun rendez-vous pour l\'instant.' : 'Aucune cliente pour l\'instant.'}</strong>${clients.total ? 'Ouvre une fiche et ajoute un rendez-vous, ou rattache une cliente à un revenu.' : 'Ajoute une cliente : ses rendez-vous apparaîtront ici, mois par mois.'}</div>`)
+        : (clients.items.length ? `<div class="list" id="c-list">${clients.items.map((c) => `
+          <div class="item" data-client="${c.id}"><div class="main"><div class="title">${esc(c.display)}</div><div class="sub">${c.visits} visite${c.visits > 1 ? 's' : ''}${c.last_date ? ' · dernière le ' + fmtDate(c.last_date) : ''}${c.next_date ? ' · prochaine le ' + fmtDate(c.next_date) : ''}</div></div><div class="amount income">${fmtMoney(c.total)}</div><svg class="chev"><use href="#i-chev"/></svg></div>`).join('')}</div>` : '<div class="empty"><strong>Aucune cliente.</strong>Ajoute une cliente avec le bouton ci-dessus.</div>')}
+      </section>`;
+    const refresh = () => renderClients();
+    qs('#c-add').addEventListener('click', () => clientForm({}, (c) => navigate(`/app/clients/${c.id}`)));
+    let t; qs('#c-q').addEventListener('input', (e) => { clearTimeout(t); t = setTimeout(() => { cliState.q = e.target.value; cliState.limit = 10; refresh(); }, 300); });
+    view.querySelectorAll('[data-mode]').forEach((bt) => bt.addEventListener('click', () => { cliState.mode = bt.dataset.mode; refresh(); }));
+    const more = qs('#c-more'); if (more) more.addEventListener('click', () => { cliState.limit += 10; refresh(); });
+    const list = qs('#c-list'); if (list) list.addEventListener('click', (e) => { const it = e.target.closest('[data-client]'); if (it) navigate(`/app/clients/${it.dataset.client}`); });
+  }
+  async function renderClient(id) {
+    const c = await api(`/clients/${id}`);
+    const initials = (c.first_name.charAt(0) + (c.last_name ? c.last_name.charAt(0) : '')).toUpperCase();
+    const past = c.visits.filter((v) => v.date <= c.today), future = c.visits.filter((v) => v.date > c.today);
+    const row = (v) => `<div class="item" data-id="${v.id}"><div class="main"><div class="title">${esc(v.label)}</div><div class="sub">${fmtDate(v.date)}${v.note ? ' · ' + esc(v.note) : ''}</div></div><div class="amount income">${fmtMoney(v.amount)}</div></div>`;
+    view.innerHTML = `
+      <a class="back" href="./app.html#clients">${ico('back')}Clients</a>
+      <section class="card poudre client-head">
+        <div class="client-avatar">${initials}</div>
+        <div class="client-id"><h2>${esc(c.first_name)} ${esc(c.last_name || '')}</h2>
+          <div class="client-contacts">${c.phone ? `<a class="btn btn-ghost btn-sm" href="tel:${esc(c.phone.replace(/\s/g, ''))}">${ico('phone')}${esc(c.phone)}</a>` : ''}${c.email ? `<a class="btn btn-ghost btn-sm" href="mailto:${esc(c.email)}">${ico('mail')}${esc(c.email)}</a>` : ''}</div>
+          ${c.note ? `<p class="client-note">${esc(c.note)}</p>` : ''}
+        </div>
+        <div class="actions"><button class="btn btn-primary" id="c-rdv">${ico('plus')}Rendez-vous</button><button class="btn btn-ghost" id="c-edit">Modifier</button></div>
+      </section>
+      <div class="kpis kpis-3">
+        <div class="card poudre kpi"><div class="k">Visites</div><div class="v">${c.visits_count ?? past.length}</div></div>
+        <div class="card poudre kpi main"><div class="k">Total</div><div class="v">${fmtMoney(c.total)}</div></div>
+        <div class="card poudre kpi"><div class="k">${c.next_date ? 'Prochain rendez-vous' : 'Dernière visite'}</div><div class="v small-v">${c.next_date ? fmtDate(c.next_date) : c.last_date ? fmtDate(c.last_date) : '—'}</div></div>
+      </div>
+      ${future.length ? `<section class="card poudre"><div class="card-head"><h3>À venir</h3></div><div class="list" data-visits>${future.map(row).join('')}</div></section>` : ''}
+      <section class="card poudre">
+        <div class="card-head"><h3>Historique</h3><span class="small muted">${past.length} visite${past.length > 1 ? 's' : ''}</span></div>
+        ${past.length ? `<div class="list" data-visits>${past.map(row).join('')}</div>` : '<div class="empty"><strong>Pas encore de visite.</strong>Ajoute un rendez-vous : il compte dans les revenus à sa date.</div>'}
+      </section>
+      <p class="small muted" style="margin:16px 0 0;text-align:right"><a href="#" id="c-del">Supprimer cette fiche</a></p>`;
+    const refresh = () => renderClient(id);
+    qs('#c-rdv').addEventListener('click', () => txForm({}, refresh, { type: 'income', client_id: id }));
+    qs('#c-edit').addEventListener('click', () => clientForm(c, refresh));
+    qs('#c-del').addEventListener('click', async (e) => { e.preventDefault(); if (await confirmDialog('Supprimer cette fiche ?', `${c.display}. Ses revenus restent dans le journal, sans cliente rattachée.`)) { await api(`/clients/${id}`, { method: 'DELETE' }); toast('Fiche supprimée'); navigate('/app/clients'); } });
+    view.querySelectorAll('[data-visits]').forEach((l) => l.addEventListener('click', (e) => { const it = e.target.closest('.item'); if (!it) return; const v = c.visits.find((x) => x.id === Number(it.dataset.id)); if (v) txForm(v, refresh); }));
   }
 
   /* ---------- Vue : abonnements ---------- */
@@ -358,7 +437,7 @@
       </div>
       <section class="card poudre">
         <div class="card-head"><h3>${d.items.length} abonnement${d.items.length > 1 ? 's' : ''}</h3><button class="btn btn-ghost btn-sm" id="add">${ico('plus')}Ajouter</button></div>
-        <p class="small muted" style="margin:0 0 6px">La coche confirme un prélèvement : il passe dans le journal et l'échéance avance. Touche une ligne pour la modifier.</p>
+        <p class="small muted" style="margin:0 0 6px">La coche confirme un prélèvement : il passe dans les dépenses et l'échéance avance. Touche une ligne pour la modifier.</p>
         ${d.items.length ? `<div class="list" id="sub-list">${d.items.map(subItem).join('')}</div>` : `<div class="empty"><strong>Aucun abonnement.</strong>Prise de rendez-vous, logiciels, assurance, banque : ajoute-les pour voir ce qu'ils coûtent vraiment et quand ils tombent.</div>`}
       </section>`;
     const refresh = () => renderSubscriptions();
@@ -368,22 +447,22 @@
       const item = e.target.closest('.item'); if (!item) return;
       const s = d.items.find((x) => x.id === Number(item.dataset.id));
       if (e.target.closest('[data-confirm]')) {
-        modal(`<h3>Confirmer le prélèvement</h3><p class="muted small">Une dépense « ${esc(s.name)} » est ajoutée au journal et la prochaine échéance avance d'une période.</p>
+        modal(`<h3>Confirmer le prélèvement</h3><p class="muted small">Une dépense « ${esc(s.name)} » est ajoutée et la prochaine échéance avance d'une période.</p>
           <div class="row"><div class="field"><label>Montant, €</label><input name="amount" type="number" step="0.01" min="0" inputmode="decimal" value="${s.amount}"></div><div class="field"><label>Date du prélèvement</label><input name="date" type="date" value="${s.next_charge_date}"></div></div>
           <div class="error" data-error></div>
           <div class="actions" style="justify-content:flex-end"><button class="btn btn-ghost" type="button" data-close>Annuler</button><button class="btn btn-primary" type="submit">Confirmer</button></div>`,
-        async (data) => { await api(`/subscriptions/${s.id}/confirm`, { method: 'POST', body: data }); toast('Prélèvement ajouté au journal'); refresh(); });
+        async (data) => { await api(`/subscriptions/${s.id}/confirm`, { method: 'POST', body: data }); toast('Prélèvement ajouté aux dépenses'); refresh(); });
         return;
       }
       if (e.target.closest('[data-del]')) {
-        if (await confirmDialog('Supprimer cet abonnement ?', `${s.name}. Les prélèvements déjà confirmés restent dans le journal.`)) { await api(`/subscriptions/${s.id}`, { method: 'DELETE' }); toast('Supprimé'); refresh(); }
+        if (await confirmDialog('Supprimer cet abonnement ?', `${s.name}. Les prélèvements déjà confirmés restent dans les dépenses.`)) { await api(`/subscriptions/${s.id}`, { method: 'DELETE' }); toast('Supprimé'); refresh(); }
         return;
       }
       subForm(s, refresh);
     });
   }
 
-  /* ---------- Vue : objectif ---------- */
+  /* ---------- Vue : objectifs ---------- */
   async function renderGoals() {
     const d = await api('/dashboard');
     const s = state.settings;
@@ -392,18 +471,19 @@
       <div class="two-col">
         <form class="card poudre" id="goal-form">
           <div class="card-head"><h3>Ton objectif</h3></div>
-          <div class="field"><label>Chiffre d'affaires visé par mois, €</label><input name="monthly_goal" type="number" step="0.01" min="0" inputmode="decimal" value="${s.monthly_goal || ''}" placeholder="3000"></div>
+          <div class="field"><label>Chiffre d'affaires visé par mois, €</label><input name="monthly_goal" type="number" step="0.01" min="0" inputmode="decimal" value="${s.monthly_goal || ''}" placeholder="1500"></div>
           <div class="field"><label>Prix moyen d'une prestation, €</label><input name="average_price" type="number" step="0.01" min="0" inputmode="decimal" value="${s.average_price || ''}" placeholder="45"></div>
+          <p class="help" style="margin:-6px 0 14px">Le prix moyen sert à compter les prestations qu'il reste à faire.</p>
           <div class="error" data-error></div>
           <button class="btn btn-primary" type="submit">Enregistrer</button>
         </form>
         <section class="card ecrin" style="margin-bottom:0">
-          <div class="card-head"><h3>${monthName().charAt(0).toUpperCase() + monthName().slice(1)}</h3></div>
+          <div class="card-head"><h3>${cap(monthName())}</h3></div>
           ${s.monthly_goal > 0 ? `
             <div class="hero-figure"><div class="value num" style="font-size:2.8rem">${fmtMoney(d.goal.achieved)}</div><p class="muted small">sur ${fmtMoney(s.monthly_goal)}, ${Math.round(d.goal.progress_pct)} %</p></div>
-            <div class="progress"><span style="width:${pct}%"></span></div>
-            <p style="margin-top:14px;font-family:var(--display);font-size:1.3rem">${d.goal.remaining_services === null ? '<span class="muted small" style="font-family:var(--ui)">Indique un prix moyen pour compter les prestations restantes.</span>' : d.goal.remaining_services === 0 ? 'Objectif atteint.' : `Encore ${d.goal.remaining_services} prestation${d.goal.remaining_services > 1 ? 's' : ''} à ${fmtMoney(s.average_price)}.`}</p>
-            <p class="small muted" style="margin:0">Arrondi au-dessus de (objectif − encaissé) ÷ prix moyen.</p>`
+            <div class="progress black"><span style="width:${pct}%"></span></div>
+            <p style="margin-top:14px;font-family:var(--display);font-size:1.4rem">${d.goal.remaining_services === null ? '<span class="muted small" style="font-family:var(--ui)">Indique un prix moyen pour compter les prestations restantes.</span>' : d.goal.remaining_services === 0 ? 'Objectif atteint.' : `Encore ${d.goal.remaining_services} prestation${d.goal.remaining_services > 1 ? 's' : ''} à ${fmtMoney(s.average_price)}.`}</p>
+            <p class="small muted" style="margin:0">Arrondi au-dessus de (objectif − chiffre d'affaires) ÷ prix moyen.</p>`
           : '<div class="empty"><strong>Pas encore d\'objectif.</strong>Renseigne-le pour suivre le mois.</div>'}
         </section>
       </div>`;
@@ -411,6 +491,64 @@
       e.preventDefault(); const f = e.target;
       try { state.settings = await api('/settings/goals', { method: 'PUT', body: Object.fromEntries(new FormData(f)) }); toast('Enregistré'); renderGoals(); }
       catch (ex) { qs('[data-error]', f).textContent = ex.message; }
+    });
+  }
+
+  /* ---------- Vue : rapports ---------- */
+  const repState = { period: 'current', from: '', to: '' };
+  async function renderReports() {
+    const q = new URLSearchParams({ period: repState.period, from: repState.from, to: repState.to });
+    const d = await api('/dashboard?' + q);
+    const prevKind = repState.period === 'current' ? 'previous' : repState.period === 'previous' ? null : repState.period === 'year' ? 'previous_year' : null;
+    const prev = prevKind ? await api('/dashboard?period=' + prevKind) : null;
+    const prevRef = repState.period === 'year' ? String(new Date().getFullYear() - 1) : fmtMonth(lastMonths(2)[0]);
+    const [txs, clients] = await Promise.all([api(`/transactions?from=${d.period.from}&to=${d.period.to}`), api('/clients')]);
+    const done = txs.items.filter((t) => t.date <= d.today);
+    const k = d.kpis;
+    const byType = d.revenue_by_type.map((g) => ({ ...g, pct: k.revenue > 0 ? Math.round((g.amount / k.revenue) * 100) : 0 }));
+    const perClient = {}; for (const t of done) if (t.type === 'income' && t.client_id) { perClient[t.client_id] = perClient[t.client_id] || { visits: 0, total: 0 }; perClient[t.client_id].visits++; perClient[t.client_id].total += t.amount; }
+    const names = Object.fromEntries(clients.items.map((c) => [c.id, c.display]));
+    const topClients = Object.entries(perClient).map(([id, v]) => ({ display: names[id] || '?', ...v })).sort((a, b) => b.total - a.total).slice(0, 5);
+    const title = repState.period === 'current' ? monthLabel(ymOf(d.today)) : repState.period === 'previous' ? monthLabel(shiftMonth(ymOf(d.today), -1)) : repState.period === 'year' ? `Année ${d.today.slice(0, 4)}` : `Du ${fmtDate(d.period.from)} au ${fmtDate(d.period.to)}`;
+    const basket = k.services > 0 ? k.revenue / k.services : 0;
+    view.innerHTML = `
+      <div class="greet greet-row">
+        <div><h2>${title}</h2><p>Synthèse de la période</p></div>
+        <select id="r-period" class="period-select" aria-label="Période">
+          <option value="current" ${repState.period === 'current' ? 'selected' : ''}>Mois en cours</option>
+          <option value="previous" ${repState.period === 'previous' ? 'selected' : ''}>Mois dernier</option>
+          <option value="year" ${repState.period === 'year' ? 'selected' : ''}>Année en cours</option>
+          <option value="custom" ${repState.period === 'custom' ? 'selected' : ''}>Autre période</option>
+        </select>
+      </div>
+      <div class="row ${repState.period === 'custom' ? '' : 'hidden'}" id="r-range" style="margin-bottom:14px"><div><label>Du</label><input type="date" id="r-from" value="${repState.from}"></div><div><label>Au</label><input type="date" id="r-to" value="${repState.to}"></div></div>
+      <div class="kpis kpis-3">
+        <div class="card poudre kpi main"><div class="k">Chiffre d'affaires</div><div class="v">${fmtMoney(k.revenue)}</div>${prev ? pctHtml(k.revenue, prev.kpis.revenue, prevRef) : ''}</div>
+        <div class="card poudre kpi out"><div class="k">Dépenses</div><div class="v">${fmtMoney(k.expenses)}</div>${prev ? pctHtml(k.expenses, prev.kpis.expenses, prevRef) : ''}</div>
+        <div class="card poudre kpi"><div class="k">Reste estimé</div><div class="v">${fmtMoney(k.remaining)}</div>${prev ? pctHtml(k.remaining, prev.kpis.remaining, prevRef) : ''}</div>
+        <div class="card poudre kpi"><div class="k">Cotisations estimées</div><div class="v">${fmtMoney(k.contributions)}</div><div class="d">${(k.contribution_rate * 100).toLocaleString('fr-FR')} % du CA</div></div>
+        <div class="card poudre kpi"><div class="k">Prestations</div><div class="v">${k.services}</div>${prev ? pctHtml(k.services, prev.kpis.services, prevRef) : ''}</div>
+        <div class="card poudre kpi"><div class="k">Panier moyen</div><div class="v">${fmtMoney(basket)}</div><div class="d">par prestation</div></div>
+      </div>
+      <div class="two-col">
+        <section class="card">
+          <div class="card-head"><h3>Revenus par type</h3></div>
+          ${byType.length ? `<table class="ops compact"><thead><tr><th>Type</th><th class="r">Part</th><th class="r">Montant</th></tr></thead><tbody>${byType.map((g) => `<tr><td class="ty">${esc(g.label)}</td><td class="r">${g.pct} %</td><td class="amt income">${fmtMoney(g.amount)}</td></tr>`).join('')}</tbody></table>` : '<p class="small muted" style="margin:0">Aucun revenu sur la période.</p>'}
+        </section>
+        <section class="card">
+          <div class="card-head"><h3>Meilleures clientes</h3><a class="small" href="./app.html#clients">Clients</a></div>
+          ${topClients.length ? `<table class="ops compact"><thead><tr><th>Cliente</th><th class="r">Visites</th><th class="r">Total</th></tr></thead><tbody>${topClients.map((c) => `<tr><td class="ty">${esc(c.display)}</td><td class="r">${c.visits}</td><td class="amt income">${fmtMoney(c.total)}</td></tr>`).join('')}</tbody></table>` : '<p class="small muted" style="margin:0">Rattache tes revenus à des clientes pour les voir ici.</p>'}
+        </section>
+      </div>
+      <div class="actions" style="justify-content:center;margin-top:18px"><button class="btn btn-primary" id="r-pdf">${ico('pdf')}Télécharger le rapport en PDF</button></div>`;
+    qs('#r-period').addEventListener('change', (e) => { repState.period = e.target.value; if (repState.period !== 'custom') renderReports(); else qs('#r-range').classList.remove('hidden'); });
+    ['r-from', 'r-to'].forEach((id) => qs('#' + id).addEventListener('change', () => { repState.from = qs('#r-from').value; repState.to = qs('#r-to').value; if (repState.from && repState.to) renderReports(); }));
+    qs('#r-pdf').addEventListener('click', () => {
+      const rows = [...done].sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+      const blob = BBM.pdf.report({ title: `Rapport — ${title}`, subtitle: `Du ${fmtDate(d.period.from)} au ${fmtDate(d.period.to)}`, business: state.user.business_name || (state.user.name ? `${state.user.name} — The Beauty Business Manager` : 'The Beauty Business Manager'),
+        kpis: [{ label: "Chiffre d'affaires", value: fmtMoney(k.revenue) }, { label: 'Dépenses', value: fmtMoney(k.expenses) }, { label: 'Cotisations estimées', value: fmtMoney(k.contributions) }, { label: 'Reste estimé', value: fmtMoney(k.remaining) }],
+        byType, clients: topClients, rows, revenue: k.revenue, expenses: k.expenses });
+      BBM.local.download(`rapport-${d.period.from}-${d.period.to}.pdf`, blob); toast('PDF téléchargé');
     });
   }
 
@@ -484,23 +622,25 @@
   }
 
   /* ---------- Routeur ---------- */
-  const routes = { '/app': renderDashboard, '/app/journal': renderJournal, '/app/abonnements': renderSubscriptions, '/app/objectifs': renderGoals, '/app/parametres': renderSettings };
+  const routes = { '/app': renderDashboard, '/app/operations': renderOperations, '/app/journal': renderOperations, '/app/clients': renderClients, '/app/objectifs': renderGoals, '/app/rapports': renderReports, '/app/parametres': renderSettings, '/app/abonnements': renderSubscriptions };
   const STATIC = Boolean(BBM.STATIC);
   const currentPath = () => STATIC ? ('/app' + (location.hash.replace('#', '') ? '/' + location.hash.replace('#', '') : '')) : location.pathname;
   const setAvatar = () => { const a = qs('#avatar'); if (a) a.textContent = ((state.user && state.user.name) || 'B').trim().charAt(0).toUpperCase(); };
   async function navigate(path, push = true) {
-    const fn = routes[path] || routes['/app'];
-    if (!routes[path]) path = '/app';
+    const client = path.match(/^\/app\/clients\/(\d+)$/);
+    const base = client ? '/app/clients' : (routes[path] ? path : '/app');
+    if (!client && !routes[path]) path = '/app';
     if (push) { if (STATIC) { const h = path.replace('/app', '').replace(/^\//, ''); if (location.hash.replace('#', '') !== h) { suppressHash = true; location.hash = h; } } else history.pushState({}, '', path); }
-    document.querySelectorAll('a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === path));
-    document.body.dataset.route = path;
-    const title = qs('#page-title'); if (title) title.textContent = TITLES[path] || 'Tableau de bord';
-    document.title = `${TITLES[path] || 'Mon espace'} — The Beauty Business Manager`;
+    document.querySelectorAll('a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === (base === '/app/journal' ? '/app/operations' : base)));
+    document.body.dataset.route = base;
+    const title = qs('#page-title'); if (title) title.textContent = client ? 'Fiche cliente' : (TITLES[base] || 'Tableau de bord');
+    document.title = `${client ? 'Fiche cliente' : (TITLES[base] || 'Mon espace')} — The Beauty Business Manager`;
     view.innerHTML = '<div class="empty">Chargement…</div>';
-    try { await fn(); window.scrollTo(0, 0); }
+    try { if (client) await renderClient(Number(client[1])); else await routes[base](); window.scrollTo(0, 0); }
     catch (ex) {
       if (ex.status === 401) return location.replace('/connexion');
       if (ex.status === 402) return location.replace('/acces');
+      if (ex.status === 404 && client) return navigate('/app/clients');
       view.innerHTML = `<p class="error">${esc(ex.message)}</p>`;
     }
   }

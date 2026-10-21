@@ -37,20 +37,32 @@
   <symbol id="i-del" viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
   <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+  <symbol id="i-ops" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><path d="M17 15l3 2-3 2"/></symbol>
+  <symbol id="i-clients" viewBox="0 0 24 24"><circle cx="9.5" cy="8" r="3.5"/><path d="M3.5 19c.6-3.4 3-5 6-5s5.4 1.6 6 5M16 5.5a3 3 0 0 1 0 5.5M20.5 18.5c-.3-2.4-1.6-3.8-3.5-4.4"/></symbol>
+  <symbol id="i-report" viewBox="0 0 24 24"><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M14 3.5v4h4M8.5 17v-4M12 17V9.5M15.5 17v-2.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A15 15 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-pdf" viewBox="0 0 24 24"><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M14 3.5v4h4M8 15h8M8 11.5h5"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
 </defs></svg>
 
 <div class="shell">
   <aside class="side" aria-label="Navigation">
     <a class="logo" href="./app.html"><span>The Beauty</span><span>Business Manager</span></a>
     <nav class="side-nav">
-      <a href="./app.html" data-route="/app"><svg><use href="#i-home"/></svg><span class="l">Tableau de bord</span><span class="s">Accueil</span></a>
-      <a href="./app.html#journal" data-route="/app/journal"><svg><use href="#i-journal"/></svg><span>Journal</span></a>
-      <a href="./app.html#abonnements" data-route="/app/abonnements"><svg><use href="#i-subs"/></svg><span>Abonnements</span></a>
-      <a href="./app.html#objectifs" data-route="/app/objectifs"><svg><use href="#i-goal"/></svg><span>Objectif</span></a>
+      <a href="./app.html" data-route="/app"><svg><use href="#i-home"/></svg><span class="l">Tableau de bord</span><span class="s">Tableau</span></a>
+      <a href="./app.html#operations" data-route="/app/operations"><svg><use href="#i-ops"/></svg><span class="l">Revenus &amp; dépenses</span><span class="s">Revenus</span></a>
+      <a href="./app.html#clients" data-route="/app/clients"><svg><use href="#i-clients"/></svg><span>Clients</span></a>
+      <a href="./app.html#objectifs" data-route="/app/objectifs"><svg><use href="#i-goal"/></svg><span>Objectifs</span></a>
+      <a href="./app.html#rapports" data-route="/app/rapports"><svg><use href="#i-report"/></svg><span>Rapports</span></a>
       <a href="./app.html#parametres" data-route="/app/parametres"><svg><use href="#i-settings"/></svg><span>Réglages</span></a>
     </nav>
-    <button class="btn btn-primary side-add" id="side-add"><svg class="ico"><use href="#i-plus"/></svg><span>Nouvelle opération</span></button>
+    <button class="btn btn-primary side-add" id="side-add"><svg class="ico"><use href="#i-plus"/></svg><span>Ajouter une opération</span></button>
     <div class="side-foot">
+      <a href="./app.html#abonnements" data-route="/app/abonnements"><svg><use href="#i-subs"/></svg><span>Abonnements</span></a>
       <a href="./index.html"><svg><use href="#i-site"/></svg><span>Site</span></a>
       <a href="./support.html"><svg><use href="#i-help"/></svg><span>Support</span></a>
     </div>
@@ -68,10 +80,10 @@
 </div>
 
 <nav class="tabbar" aria-label="Navigation">
-  <a href="./app.html" data-route="/app"><svg><use href="#i-home"/></svg><span>Accueil</span></a>
-  <a href="./app.html#journal" data-route="/app/journal"><svg><use href="#i-journal"/></svg><span>Journal</span></a>
+  <a href="./app.html" data-route="/app"><svg><use href="#i-home"/></svg><span>Tableau<br>de bord</span></a>
+  <a href="./app.html#operations" data-route="/app/operations"><svg><use href="#i-ops"/></svg><span>Revenus &amp;<br>dépenses</span></a>
   <button class="tab-add" id="fab" title="Ajouter une opération" aria-label="Ajouter une opération"><svg><use href="#i-plus"/></svg></button>
-  <a href="./app.html#abonnements" data-route="/app/abonnements"><svg><use href="#i-subs"/></svg><span>Abonnements</span></a>
+  <a href="./app.html#clients" data-route="/app/clients"><svg><use href="#i-clients"/></svg><span>Clients</span></a>
   <button id="tab-more" class="tab-more" aria-label="Plus"><svg><use href="#i-more"/></svg><span>Plus</span></button>
 </nav>
 <div id="modal-root"></div>
@@ -79,6 +91,7 @@
 <script src="./js/calc.js"></script>
 <script src="./js/common.js"></script>
 <script src="./js/local-api.js"></script>
+<script src="./js/pdf.js"></script>
 <script src="./js/app.js"></script>
 <script>if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(() => {});</script>
 </body>
