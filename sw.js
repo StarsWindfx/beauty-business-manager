@@ -1,9 +1,9 @@
 /* Hors-ligne : la coque de l'application est mise en cache ; les données restent dans le navigateur. */
-const VERSION = 'bbm-2026-10-21d';
+const VERSION = 'bbm-2026-10-21e';
 const SHELL = [
   './app.html', './index.html', './support.html', './manifest.webmanifest',
   './css/style.css', './css/landing.css',
-  './js/calc.js', './js/common.js', './js/local-api.js', './js/app.js', './js/pdf.js', './js/landing.js',
+  './js/calc.js', './js/common.js', './js/local-api.js', './js/app.js', './js/pdf.js', './js/charts.js', './js/landing.js',
   './img/satin-960.jpg', './img/satin-960.webp', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png', './icons/icon-maskable-512.png',
   './legal/mentions-legales.html', './legal/cgu.html', './legal/cgv.html', './legal/confidentialite.html',
 ];

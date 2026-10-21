@@ -10,7 +10,7 @@
   const FREQ = { monthly: 'Chaque mois', quarterly: 'Chaque trimestre', yearly: 'Chaque année', weekly: 'Chaque semaine', custom: 'Tous les N mois' };
   const STATUS = { active: 'Actif', paused: 'En pause', canceled: 'Résilié' };
   const THEMES = { bordeaux: ['Bordeaux', '#8a1f3a'], rose: ['Rose poudré', '#c4717f'], laque: ['Rouge laque', '#b3123f'], champagne: ['Champagne', '#b38a4e'], nude: ['Nude', '#a27a64'], prune: ['Prune', '#6d3b8f'] };
-  const TITLES = { '/app': 'Tableau de bord', '/app/operations': 'Revenus & dépenses', '/app/clients': 'Clients', '/app/objectifs': 'Objectifs', '/app/rapports': 'Rapports', '/app/parametres': 'Réglages', '/app/abonnements': 'Abonnements' };
+  const TITLES = { '/app': 'Tableau de bord', '/app/operations': 'Revenus & dépenses', '/app/clients': 'Clients', '/app/objectifs': 'Objectifs', '/app/rapports': 'Rapports', '/app/statistiques': 'Statistiques', '/app/parametres': 'Réglages', '/app/abonnements': 'Abonnements' };
   const MONTHS_SHORT = ['jan', 'fév', 'mar', 'avr', 'mai', 'juin', 'juil', 'aoû', 'sep', 'oct', 'nov', 'déc'];
   const DAYS_SHORT = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
   const options = (map, selected) => Object.entries(map).map(([k, v]) => `<option value="${k}" ${k === selected ? 'selected' : ''}>${esc(v)}</option>`).join('');
@@ -64,6 +64,7 @@
       <div class="menu-list">
         <a href="./app.html#objectifs">${ico('goal')}Objectifs</a>
         <a href="./app.html#rapports">${ico('report')}Rapports</a>
+        <a href="./app.html#statistiques">${ico('stats')}Statistiques</a>
         <a href="./app.html#abonnements">${ico('subs')}Abonnements</a>
         <a href="./app.html#parametres">${ico('settings')}Réglages</a>
         <button type="button" id="more-export">${ico('export')}Exporter mes données<small>JSON</small></button>
@@ -552,6 +553,131 @@
     });
   }
 
+  /* ---------- Vue : statistiques ---------- */
+  const statState = { period: '6m', sel: {} };
+  let statRedraws = [];
+  async function renderStats() {
+    const CH = BBM.charts;
+    const [tx, clientsRes] = await Promise.all([api('/transactions'), api('/clients')]);
+    const t = today(); const done = tx.items.filter((x) => x.date <= t);
+    const rate = state.settings.contribution_rate, goal = state.settings.monthly_goal;
+    const nowYm = ymOf(t);
+    let months;
+    if (statState.period === 'year') { const y = t.slice(0, 4); months = []; for (let m = 1; m <= Number(t.slice(5, 7)); m++) months.push(`${y}-${pad(m)}`); }
+    else if (statState.period === 'all') { const first = done.length ? done.map((x) => ymOf(x.date)).sort()[0] : nowYm; months = []; let m = first; let guard = 0; while (m <= nowYm && guard++ < 60) { months.push(m); m = shiftMonth(m, 1); } if (months.length < 3) months = lastMonths(3); }
+    else months = lastMonths({ '3m': 3, '6m': 6, '12m': 12 }[statState.period] || 6);
+    const from = months[0] + '-01';
+    const inP = done.filter((x) => x.date >= from);
+    const incomes = inP.filter((x) => x.type === 'income'), expenses = inP.filter((x) => x.type === 'expense');
+    const sum = (list) => C.round2(list.reduce((a, x) => a + x.amount, 0));
+    /* première visite de chaque cliente, sur tout l'historique */
+    const firstVisit = {}; for (const x of [...done].sort((a, b) => a.date.localeCompare(b.date))) if (x.type === 'income' && x.client_id && !firstVisit[x.client_id]) firstVisit[x.client_id] = x.date;
+    const M = months.map((m) => {
+      const inc = incomes.filter((x) => x.date.startsWith(m)), exp = expenses.filter((x) => x.date.startsWith(m));
+      const rev = sum(inc), ex = sum(exp), cot = C.estimatedContributions(rev, rate);
+      const presta = inc.filter((x) => x.category === 'prestation').length;
+      const newVisits = inc.filter((x) => x.client_id && firstVisit[x.client_id] && firstVisit[x.client_id].startsWith(m)).length;
+      const withClient = inc.filter((x) => x.client_id).length;
+      return { m, rev, ex, cot, rest: C.round2(rev - ex - cot), presta, count: inc.length, basket: inc.length ? rev / inc.length : 0, newClients: Object.values(firstVisit).filter((d) => d.startsWith(m)).length, newVisits, oldVisits: withClient - newVisits, loyalPct: withClient ? ((withClient - newVisits) / withClient) * 100 : 0, goalPct: goal > 0 ? (rev / goal) * 100 : 0 };
+    });
+    const labels = months.map((m) => months.length > 12 ? fmtMonth(m).replace('.', '') + ' ' + m.slice(2, 4) : fmtMonth(m).replace('.', ''));
+    const totRev = sum(incomes), totExp = sum(expenses), totCot = C.estimatedContributions(totRev, rate), totRest = C.round2(totRev - totExp - totCot);
+    const nPresta = incomes.filter((x) => x.category === 'prestation').length, basket = incomes.length ? totRev / incomes.length : 0;
+    const activeClients = new Set(incomes.filter((x) => x.client_id).map((x) => x.client_id));
+    const newClients = Object.entries(firstVisit).filter(([, d]) => d >= from).length;
+    /* fidélité : visites par cliente sur tout l'historique */
+    const visitsBy = {}; for (const x of done) if (x.type === 'income' && x.client_id) (visitsBy[x.client_id] = visitsBy[x.client_id] || []).push(x.date);
+    const withVisits = Object.values(visitsBy), returning = withVisits.filter((v) => v.length >= 2).length;
+    const intervals = withVisits.flatMap((v) => { const d = [...v].sort(); return d.slice(1).map((x, i) => C.daysUntil(x, d[i])); });
+    const avgInterval = intervals.length ? Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length) : null;
+    /* jours de la semaine */
+    const WD = Array.from({ length: 7 }, () => ({ rev: 0, count: 0 }));
+    for (const x of incomes) { const d = new Date(x.date + 'T00:00:00Z'); const i = (d.getUTCDay() + 6) % 7; WD[i].rev += x.amount; WD[i].count++; }
+    /* calendrier : 12 semaines jusqu'à dimanche */
+    const w = C.weekBounds(t); const start = new Date(w.from + 'T00:00:00Z'); start.setUTCDate(start.getUTCDate() - 7 * 25);
+    const days = []; for (let i = 0; i < 26 * 7; i++) { const d = new Date(start); d.setUTCDate(start.getUTCDate() + i); const key = d.toISOString().slice(0, 10); const list = done.filter((x) => x.type === 'income' && x.date === key); days.push({ key, value: sum(list), count: list.length, future: key > t, label: dayLabel(key) + ' ' + key.slice(0, 4), monthStart: (d.getUTCDate() <= 7 && (d.getUTCDay() + 6) % 7 === 0) || i === 0 ? fmtMonth(key.slice(0, 7)).replace('.', '') : null }); }
+    /* répartitions */
+    const byCat = {}; for (const x of expenses) byCat[x.category] = (byCat[x.category] || 0) + x.amount;
+    const catGroups = Object.entries(byCat).map(([k, v]) => ({ label: TX_CAT[k] || k, amount: C.round2(v) })).sort((a, b) => b.amount - a.amount);
+    const byType = {}; for (const x of incomes) byType[x.label.trim()] = (byType[x.label.trim()] || 0) + x.amount;
+    const typeItems = Object.entries(byType).map(([label, value]) => ({ label, value: C.round2(value) })).sort((a, b) => b.value - a.value).slice(0, 8);
+    const names = Object.fromEntries(clientsRes.items.map((c) => [c.id, c.display]));
+    const perClient = {}; for (const x of incomes) if (x.client_id) { perClient[x.client_id] = perClient[x.client_id] || { total: 0, visits: 0 }; perClient[x.client_id].total += x.amount; perClient[x.client_id].visits++; }
+    const topClients = Object.entries(perClient).map(([id, v]) => ({ label: names[id] || '?', value: C.round2(v.total), extra: `${v.visits} visite${v.visits > 1 ? 's' : ''}` })).sort((a, b) => b.value - a.value).slice(0, 6);
+    /* records */
+    const byDay = {}; for (const x of incomes) byDay[x.date] = (byDay[x.date] || 0) + x.amount;
+    const bestDay = Object.entries(byDay).sort((a, b) => b[1] - a[1])[0];
+    const bestMonth = [...M].sort((a, b) => b.rev - a.rev)[0];
+    const biggest = [...incomes].sort((a, b) => b.amount - a.amount)[0];
+    const loyal = Object.entries(visitsBy).sort((a, b) => b[1].length - a[1].length)[0];
+    const periodLabel = { '3m': 'Trois derniers mois', '6m': 'Six derniers mois', '12m': 'Douze derniers mois', year: `Année ${t.slice(0, 4)}`, all: 'Tout l\'historique' }[statState.period];
+    const prevRange = (() => { const n = months.length; const prevMonths = []; let m = shiftMonth(months[0], -n); for (let i = 0; i < n; i++) { prevMonths.push(m); m = shiftMonth(m, 1); } return prevMonths; })();
+    const prevInc = done.filter((x) => x.type === 'income' && x.date >= prevRange[0] + '-01' && x.date < from);
+    const prevRev = sum(prevInc);
+    const sp = (key, color) => CH.sparkline({ values: M.map((x) => x[key]), color });
+    const tile = (k, v, spark, d = '') => `<div class="card poudre kpi stat"><div class="k">${k}</div><div class="v">${v}</div><div class="stat-foot">${d ? `<div class="d">${d}</div>` : '<span></span>'}${spark || ''}</div></div>`;
+    view.innerHTML = `
+      <div class="greet greet-row">
+        <div><h2>${periodLabel}</h2><p>${months.length > 1 ? `${cap(monthLabel(months[0]))} – ${monthLabel(months[months.length - 1])}` : cap(monthLabel(months[0]))} · ${inP.length} opération${inP.length > 1 ? 's' : ''}</p></div>
+        <select id="s-period" class="period-select" aria-label="Période">${[['3m', '3 mois'], ['6m', '6 mois'], ['12m', '12 mois'], ['year', 'Cette année'], ['all', 'Tout']].map(([k, l]) => `<option value="${k}" ${statState.period === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      </div>
+      <div class="kpis">
+        ${tile("Chiffre d'affaires", fmtMoney(totRev), sp('rev', 'var(--or-deep)'), prevRev > 0 ? `<b>${C.pctChange(totRev, prevRev) > 0 ? '+' : ''}${C.pctChange(totRev, prevRev)} %</b> vs période précédente` : `${fmtMoney(months.length ? totRev / months.length : 0)} par mois`)}
+        ${tile('Dépenses', fmtMoney(totExp), sp('ex', 'var(--laque)'), totRev > 0 ? `${Math.round((totExp / totRev) * 100)} % du CA` : '')}
+        ${tile('Reste estimé', fmtMoney(totRest), sp('rest', 'var(--or-deep)'), totRev > 0 ? `marge ${Math.round((totRest / totRev) * 100)} %` : '')}
+        ${tile('Cotisations estimées', fmtMoney(totCot), sp('cot', 'var(--sourdine-poudre)'), `${(rate * 100).toLocaleString('fr-FR')} % du CA`)}
+        ${tile('Prestations', String(nPresta), sp('presta', 'var(--or-deep)'), months.length ? `${(nPresta / months.length).toFixed(1).replace('.', ',')} par mois` : '')}
+        ${tile('Panier moyen', fmtMoney(basket), sp('basket', 'var(--or-deep)'), 'par encaissement')}
+        ${tile('Clientes actives', String(activeClients.size), sp('newClients', 'var(--laque)'), `${newClients} nouvelle${newClients > 1 ? 's' : ''}`)}
+        ${tile('Fidélité', withVisits.length ? `${Math.round((returning / withVisits.length) * 100)} %` : '—', sp('loyalPct', 'var(--laque)'), avgInterval ? `revient tous les ${avgInterval} j` : 'clientes revenues au moins une fois')}
+      </div>
+
+      <section class="card"><div class="card-head"><h3>Revenus, dépenses et reste par mois</h3><span class="legend" style="margin:0;font-size:.8rem"><span style="--c:var(--or)">CA</span><span style="--c:var(--laque)">Dépenses</span><span style="--c:var(--nacre-2)">Reste</span></span></div><div class="chart-slot" id="st-lines"></div></section>
+      <div class="dash-grid">
+        <section class="card"><div class="card-head"><h3>Objectif atteint, par mois</h3><span class="small muted">${goal > 0 ? `objectif ${fmtMoney(goal)}` : 'pas d\'objectif défini'}</span></div><div class="chart-slot" id="st-goal"></div></section>
+        <section class="card"><div class="card-head"><h3>Cumul de la période</h3><span class="legend" style="margin:0;font-size:.8rem"><span style="--c:var(--or)">CA cumulé</span>${goal > 0 ? '<span style="--c:var(--nacre-2)">Rythme objectif</span>' : ''}</span></div><div class="chart-slot" id="st-cumul"></div></section>
+        <section class="card"><div class="card-head"><h3>Prestations par mois</h3><span class="small muted">${nPresta} sur la période</span></div><div class="chart-slot" id="st-presta"></div></section>
+        <section class="card"><div class="card-head"><h3>Panier moyen</h3><span class="small muted">par encaissement</span></div><div class="chart-slot" id="st-basket"></div></section>
+        <section class="card"><div class="card-head"><h3>Tes meilleurs jours</h3><span class="small muted">CA par jour de la semaine</span></div><div class="chart-slot" id="st-wd"></div></section>
+        <section class="card"><div class="card-head"><h3 id="st-heat-title">Les 12 dernières semaines</h3><span class="small muted">plus c'est doré, plus ça a rapporté</span></div><div class="chart-slot" id="st-heat"></div></section>
+        <section class="card"><div class="card-head"><h3>Où va l'argent</h3><span class="small muted">${fmtMoney(totExp)} de dépenses</span></div>${catGroups.length ? `<div class="donut-wrap">${CH.donut({ groups: catGroups.slice(0, 5), total: totExp, colors: [...CH.PALETTE], center: fmtMoney(totExp), sub: 'dépensés' })}<div class="donut-legend">${catGroups.slice(0, 5).map((g, i) => `<div><i style="--c:${CH.PALETTE[i]}"></i><span>${esc(g.label)}</span><b>${Math.round((g.amount / totExp) * 100)} %<small>${fmtMoney(g.amount)}</small></b></div>`).join('')}</div></div>` : '<div class="empty"><strong>Aucune dépense sur la période.</strong></div>'}</section>
+        <section class="card"><div class="card-head"><h3>Revenus par type</h3><span class="small muted">les 8 principaux</span></div>${typeItems.length ? `<div class="chart-slot" id="st-types"></div>` : '<div class="empty"><strong>Aucun revenu sur la période.</strong></div>'}</section>
+        <section class="card"><div class="card-head"><h3>Nouvelles et fidèles</h3><span class="legend" style="margin:0;font-size:.8rem"><span style="--c:var(--laque)">Nouvelles</span><span style="--c:var(--or)">Fidèles</span></span></div><div class="chart-slot" id="st-clients"></div><p class="help" style="margin:4px 0 0">Visites par mois, selon que la cliente venait pour la première fois ou non.</p></section>
+        <section class="card"><div class="card-head"><h3>Meilleures clientes</h3><a class="small" href="./app.html#clients">Clients</a></div>${topClients.length ? `<div class="chart-slot" id="st-top"></div>` : '<div class="empty"><strong>Rattache tes revenus à des clientes pour les voir ici.</strong></div>'}</section>
+        <section class="card"><div class="card-head"><h3>Cotisations à provisionner</h3><span class="small muted">${fmtMoney(totCot)} sur la période</span></div><div class="chart-slot" id="st-cot"></div></section>
+        <section class="card poudre"><div class="card-head"><h3>Records</h3></div><div class="list">
+          <div class="item"><div class="main"><div class="title">Meilleur jour</div><div class="sub">${bestDay ? fmtDate(bestDay[0]) : '—'}</div></div><div class="amount income">${bestDay ? fmtMoney(bestDay[1]) : '—'}</div></div>
+          <div class="item"><div class="main"><div class="title">Meilleur mois</div><div class="sub">${bestMonth && bestMonth.rev > 0 ? monthLabel(bestMonth.m) : '—'}</div></div><div class="amount income">${bestMonth && bestMonth.rev > 0 ? fmtMoney(bestMonth.rev) : '—'}</div></div>
+          <div class="item"><div class="main"><div class="title">Plus grosse prestation</div><div class="sub">${biggest ? esc(biggest.label) + ', le ' + fmtDate(biggest.date) : '—'}</div></div><div class="amount income">${biggest ? fmtMoney(biggest.amount) : '—'}</div></div>
+          <div class="item"><div class="main"><div class="title">Cliente la plus fidèle</div><div class="sub">${loyal ? esc(names[loyal[0]] || '?') : '—'}</div></div><div class="amount">${loyal ? loyal[1].length + ' visites' : '—'}</div></div>
+        </div></section>
+      </div>`;
+    const slotW = (id) => Math.max(240, (qs('#' + id) || { clientWidth: 300 }).clientWidth);
+    const sel = (k) => statState.sel[k] ?? null;
+    statRedraws = [];
+    const chart = (id, draw, interactive = true) => {
+      const slot = qs('#' + id); if (!slot) return;
+      const paint = () => { slot.innerHTML = draw(slotW(id)); if (interactive) CH.attach(slot, (i) => { if (statState.sel[id] === i) return; statState.sel[id] = i; paint(); }); };
+      paint(); statRedraws.push(paint);
+    };
+    chart('st-lines', (W) => CH.lineChart({ W, labels, selected: sel('st-lines'), id: 'l1', series: [{ name: 'CA', values: M.map((x) => x.rev), color: 'var(--or)', area: true }, { name: 'Dépenses', values: M.map((x) => x.ex), color: 'var(--laque)' }, { name: 'Reste', values: M.map((x) => x.rest), color: 'var(--nacre-2)', dash: true, width: 1.8 }], zeroBase: false }));
+    chart('st-goal', (W) => CH.barChart({ W, H: 200, labels, selected: sel('st-goal'), highlight: months.indexOf(nowYm), refLine: goal > 0 ? 100 : null, fmtV: (v) => Math.round(v) + ' %', fmtAxis: (v) => Math.round(v) + ' %', tipLines: (i) => [fmtMoney(M[i].rev)], series: [{ name: 'Objectif', values: M.map((x) => Math.round(x.goalPct)), color: 'var(--laque)' }] }));
+    const cum = []; let acc = 0; M.forEach((x) => { acc += x.rev; cum.push(C.round2(acc)); });
+    chart('st-cumul', (W) => CH.lineChart({ W, H: 200, labels, selected: sel('st-cumul'), id: 'l2', series: [{ name: 'CA cumulé', values: cum, color: 'var(--or)', area: true }, ...(goal > 0 ? [{ name: 'Objectif', values: M.map((_, i) => goal * (i + 1)), color: 'var(--nacre-2)', dash: true, width: 1.6 }] : [])] }));
+    chart('st-presta', (W) => CH.barChart({ W, H: 200, labels, selected: sel('st-presta'), highlight: months.indexOf(nowYm), fmtV: (v) => String(v), fmtAxis: (v) => String(Math.round(v)), tipLines: (i) => [`${M[i].count} encaissement${M[i].count > 1 ? 's' : ''}`], series: [{ name: 'Prestations', values: M.map((x) => x.presta), color: 'var(--or)' }] }));
+    chart('st-basket', (W) => CH.lineChart({ W, H: 200, labels, selected: sel('st-basket'), id: 'l3', series: [{ name: 'Panier moyen', values: M.map((x) => C.round2(x.basket)), color: 'var(--laque-2)', area: true }] }));
+    chart('st-wd', (W) => CH.barChart({ W, H: 200, labels: DAYS_SHORT, selected: sel('st-wd'), highlight: (new Date(t + 'T00:00:00Z').getUTCDay() + 6) % 7, tipLines: (i) => [`${WD[i].count} encaissement${WD[i].count > 1 ? 's' : ''}`], series: [{ name: 'CA', values: WD.map((d) => C.round2(d.rev)), color: 'var(--or)' }] }));
+    const heatSlot = qs('#st-heat'); let heatWeeks = 0;
+    const paintHeat = () => { const W = slotW('st-heat'); const weeks = W >= 560 ? 26 : W >= 400 ? 16 : 12; if (weeks !== heatWeeks) { heatWeeks = weeks; statState.sel['st-heat'] = null; qs('#st-heat-title').textContent = `Les ${weeks} dernières semaines`; } const dd = days.slice(-weeks * 7); heatSlot.innerHTML = CH.heatmap({ W, days: dd, weeks, selected: sel('st-heat') }); CH.attachHeat(heatSlot, (i) => { if (statState.sel['st-heat'] === i) return; statState.sel['st-heat'] = i; paintHeat(); }); };
+    paintHeat(); statRedraws.push(paintHeat);
+    if (typeItems.length) chart('st-types', (W) => CH.hbars({ W, items: typeItems }), false);
+    chart('st-clients', (W) => CH.barChart({ W, H: 200, labels, selected: sel('st-clients'), stacked: true, fmtV: (v) => String(v), series: [{ name: 'Nouvelles', values: M.map((x) => x.newVisits), color: 'var(--laque)' }, { name: 'Fidèles', values: M.map((x) => Math.max(0, x.oldVisits)), color: 'var(--or)' }] }));
+    if (topClients.length) chart('st-top', (W) => CH.hbars({ W, items: topClients }), false);
+    chart('st-cot', (W) => CH.barChart({ W, H: 180, labels, selected: sel('st-cot'), highlight: months.indexOf(nowYm), series: [{ name: 'Cotisations', values: M.map((x) => x.cot), color: 'var(--sourdine)' }] }));
+    qs('#s-period').addEventListener('change', (e) => { statState.period = e.target.value; statState.sel = {}; renderStats(); });
+  }
+  window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (qs('#st-lines')) statRedraws.forEach((f) => f()); }, 150); });
+
   /* ---------- Vue : réglages ---------- */
   async function renderSettings() {
     const s = state.settings; const u = state.user;
@@ -622,7 +748,7 @@
   }
 
   /* ---------- Routeur ---------- */
-  const routes = { '/app': renderDashboard, '/app/operations': renderOperations, '/app/journal': renderOperations, '/app/clients': renderClients, '/app/objectifs': renderGoals, '/app/rapports': renderReports, '/app/parametres': renderSettings, '/app/abonnements': renderSubscriptions };
+  const routes = { '/app': renderDashboard, '/app/operations': renderOperations, '/app/journal': renderOperations, '/app/clients': renderClients, '/app/objectifs': renderGoals, '/app/rapports': renderReports, '/app/statistiques': renderStats, '/app/parametres': renderSettings, '/app/abonnements': renderSubscriptions };
   const STATIC = Boolean(BBM.STATIC);
   const currentPath = () => STATIC ? ('/app' + (location.hash.replace('#', '') ? '/' + location.hash.replace('#', '') : '')) : location.pathname;
   const setAvatar = () => { const a = qs('#avatar'); if (a) a.textContent = ((state.user && state.user.name) || 'B').trim().charAt(0).toUpperCase(); };

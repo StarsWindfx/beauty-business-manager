@@ -212,7 +212,7 @@ svg.ico, .side-nav svg, .tabbar svg, .side-foot svg, .kpi svg, .menu-list svg, .
 .grid-2 { grid-template-columns: 1fr 1fr; }
 
 /* ---------- KPI du mois ---------- */
-.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 14px; }
+.kpis { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin: 0 0 14px; }
 .kpi { padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 8px; min-height: 108px; }
 .kpi .k { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .8rem; color: var(--sourdine-poudre); }
 .kpi .k svg { width: 20px; height: 20px; opacity: .8; }
@@ -275,6 +275,7 @@ svg.ico, .side-nav svg, .tabbar svg, .side-foot svg, .kpi svg, .menu-list svg, .
 .donut-legend i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); display: block; box-shadow: inset 0 1px 1px rgba(255,255,255,.4); }
 .donut-legend b { font-weight: 500; color: var(--nacre); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .donut-legend small { color: var(--sourdine); margin-left: 6px; }
+@media (max-width: 439px) { .donut-wrap { grid-template-columns: 112px 1fr; gap: 12px; } .donut-legend small { display: block; margin-left: 0; text-align: right; line-height: 1.15; } }
 
 /* Chiffres secondaires */
 .figures { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 14px; }
@@ -331,6 +332,18 @@ input[type="date"] { min-width: 0; }
 .kpis-3 { grid-template-columns: 1fr 1fr; }
 .kpi .v.small-v { font-size: 1.35rem; }
 .donut-legend .other { opacity: .7; }
+
+/* ---------- Statistiques ---------- */
+.kpi.stat { min-height: 118px; }
+.stat-foot { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 8px; }
+.stat-foot .spark { flex: 0 0 auto; width: 84px; height: 28px; margin-left: auto; }
+.stat-foot .d { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 1099px) { .stat-foot { flex-direction: column; align-items: stretch; } .stat-foot .spark { width: 100%; height: 26px; margin-left: 0; } }
+.chart .tipg .tip-bg { fill: var(--or); } .chart .tipg .tip-t { fill: #1a0a0f; }
+.chart.hb .lbl { fill: var(--nacre-2); font-size: 12px; } .chart.hb .val { fill: var(--nacre); font-size: 12px; font-weight: 600; } .chart.hb .val .muted { fill: var(--sourdine); font-weight: 400; }
+.chart.hb .track { fill: rgba(var(--ink), .08); }
+.chart.heat .cell { stroke: rgba(var(--ink), .06); } .chart.heat .cell.future { opacity: .35; } .chart.heat .cell.sel { stroke: var(--nacre); stroke-width: 1.5; } .chart.heat .cell { cursor: pointer; }
+.chart.heat text { font-size: 10px; }
 
 /* ---------- Tableaux : revenus & dépenses ---------- */
 .table-card { padding: 16px 14px; }
@@ -501,8 +514,9 @@ details p { margin: 8px 0 0; color: var(--nacre-2); max-width: 60ch; }
 
 /* ---------- Tablette et ordinateur : barre latérale ---------- */
 @media (min-width: 600px) {
-  .kpis { grid-template-columns: repeat(4, 1fr); }
-  .kpis-3 { grid-template-columns: repeat(3, 1fr); }
+  .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .kpi .v { font-size: clamp(1.25rem, 2.9vw, 2.1rem); }
+  .kpis-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .client-head { grid-template-columns: auto 1fr auto; }
   .client-head .actions { grid-column: auto; }
   .grid-2 { grid-template-columns: 1fr 1fr; }
