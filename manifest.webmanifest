@@ -15,7 +15,7 @@
     { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Journal", "url": "./app.html#journal", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Abonnements", "url": "./app.html#abonnements", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Revenus & dépenses", "url": "./app.html#operations", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Clients", "url": "./app.html#clients", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
